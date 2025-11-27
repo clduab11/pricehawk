@@ -141,13 +141,13 @@ async function postWithPhoto(glitch: ValidatedGlitch): Promise<string> {
 ```typescript
 function formatGlitchMessage(glitch: ValidatedGlitch): string {
   const { product, validation, profit_margin } = glitch;
-  const savings = product.original_price - product.current_price;
+  const savings = (product.original_price ?? product.current_price) - product.current_price;
   
   return `🚨 PRICING ERROR ALERT! 🚨
 
 ${product.product_name}
 
-💰 Was: $${product.original_price.toFixed(2)}
+💰 Was: $${(product.original_price ?? 0).toFixed(2)}
 🎯 Now: $${product.current_price.toFixed(2)}
 💵 You Save: $${savings.toFixed(2)} (${Math.round(profit_margin)}% OFF!)
 
@@ -170,7 +170,7 @@ function formatCompactMessage(glitch: ValidatedGlitch): string {
   const { product, profit_margin } = glitch;
   
   return `🔥 ${Math.round(profit_margin)}% OFF - ${product.product_name}
-$${product.current_price.toFixed(2)} (was $${product.original_price.toFixed(2)})
+$${product.current_price.toFixed(2)} (was $${(product.original_price ?? 0).toFixed(2)})
 👉 ${product.url}`;
 }
 ```

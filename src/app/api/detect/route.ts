@@ -59,18 +59,19 @@ export async function POST(request: NextRequest) {
 
     // If raw data provided, construct anomaly and validate
     if (data.current_price && data.product_name) {
+      const tempId = crypto.randomUUID();
       const anomaly: PricingAnomaly = {
-        id: `temp_${Date.now()}`,
-        product_id: `temp_${Date.now()}`,
+        id: `temp_${tempId}`,
+        product_id: `temp_prod_${tempId}`,
         product: {
-          id: `temp_${Date.now()}`,
+          id: `temp_prod_${tempId}`,
           product_name: data.product_name,
           current_price: data.current_price,
           original_price: data.original_price || null,
           stock_status: 'unknown',
           retailer_id: data.retailer_id || 'unknown',
           last_checked: new Date().toISOString(),
-          url: 'https://example.com',
+          url: '',
         },
         anomaly_type: data.z_score && data.z_score > 3 ? 'z_score' : 'percentage_drop',
         z_score: data.z_score,

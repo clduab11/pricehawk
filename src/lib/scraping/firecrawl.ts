@@ -8,7 +8,7 @@ const FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;
 
 interface FirecrawlScrapeOptions {
   url: string;
-  formats?: ('markdown' | 'html' | 'json')[];
+  formats?: ('markdown' | 'html' | 'json' | 'extract')[];
   includeTags?: string[];
   excludeTags?: string[];
   waitFor?: number;
@@ -200,8 +200,8 @@ export async function scrapeAndDetect(url: string): Promise<ScrapeResult> {
     return { success: false, error: 'URL recently processed (deduplication)' };
   }
 
-  // Scrape the URL
-  const scrapeResult = await scrapeUrl({ url, formats: ['markdown'] });
+  // Scrape the URL with extract format for LLM extraction
+  const scrapeResult = await scrapeUrl({ url, formats: ['extract'] });
   if (!scrapeResult.success || !scrapeResult.data) {
     return { success: false, error: scrapeResult.error || 'Scraping failed' };
   }
@@ -212,7 +212,7 @@ export async function scrapeAndDetect(url: string): Promise<ScrapeResult> {
     return { success: false, error: 'Could not extract product price' };
   }
 
-  const productId = `prod_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  const productId = `prod_${crypto.randomUUID()}`;
   const product: Product = {
     id: productId,
     product_name: extraction.product_name || scrapeResult.data.metadata?.title || 'Unknown Product',
@@ -241,7 +241,7 @@ export async function scrapeAndDetect(url: string): Promise<ScrapeResult> {
   }
 
   // Create anomaly record
-  const anomalyId = `anomaly_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  const anomalyId = `anomaly_${crypto.randomUUID()}`;
   const anomaly = {
     id: anomalyId,
     product_id: product.id,

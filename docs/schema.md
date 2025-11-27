@@ -289,6 +289,7 @@ interface Notification {
 |--------|------|-------------|
 | id | uuid | Primary key |
 | product_id | uuid | Foreign key to products |
+| product_url | text | Product URL (indexed for lookups) |
 | price | decimal | Price at time of check |
 | checked_at | timestamptz | Check timestamp |
 

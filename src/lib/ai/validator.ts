@@ -201,7 +201,7 @@ export async function validateAndProcess(anomaly: PricingAnomaly): Promise<Valid
   }
 
   // Create validated glitch record
-  const glitchId = `glitch_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  const glitchId = `glitch_${crypto.randomUUID()}`;
   const validatedGlitch: ValidatedGlitch = {
     id: glitchId,
     anomaly_id: anomaly.id,
@@ -279,5 +279,6 @@ async function saveValidatedGlitch(glitch: ValidatedGlitch): Promise<void> {
 
   if (error) {
     console.error('Error saving validated glitch:', error);
+    throw error;
   }
 }
