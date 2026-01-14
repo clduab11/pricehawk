@@ -3,9 +3,12 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { createCheckoutSession, SUBSCRIPTION_TIERS, SubscriptionTier } from '@/lib/subscription';
 import { db } from '@/db';
 
+type BillingCycle = 'monthly' | 'annual';
+
 /**
  * POST /api/checkout
  * Create a Stripe Checkout session for subscription purchase
+ * Supports both monthly and annual billing cycles
  */
 export async function POST(req: NextRequest) {
   try {
@@ -14,17 +17,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { tier } = await req.json();
+    const { tier, billingCycle = 'annual' } = await req.json() as {
+      tier: string;
+      billingCycle?: BillingCycle;
+    };
 
     // Validate tier
     if (!tier || !['starter', 'pro', 'elite'].includes(tier)) {
       return NextResponse.json({ error: 'Invalid subscription tier' }, { status: 400 });
     }
 
+    // Validate billing cycle
+    if (!['monthly', 'annual'].includes(billingCycle)) {
+      return NextResponse.json({ error: 'Invalid billing cycle' }, { status: 400 });
+    }
+
     const tierConfig = SUBSCRIPTION_TIERS[tier as SubscriptionTier];
-    if (!tierConfig?.priceId) {
+
+    // Select price ID based on billing cycle
+    const priceId = billingCycle === 'annual'
+      ? tierConfig?.priceIdAnnual
+      : tierConfig?.priceId;
+
+    if (!priceId) {
       return NextResponse.json(
-        { error: 'Stripe price not configured for this tier' },
+        { error: `Stripe price not configured for ${tier} (${billingCycle})` },
         { status: 500 }
       );
     }
@@ -46,8 +63,8 @@ export async function POST(req: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const session = await createCheckoutSession(
       user.id,
-      tierConfig.priceId,
-      `${baseUrl}/dashboard?checkout=success&tier=${tier}`,
+      priceId,
+      `${baseUrl}/dashboard?checkout=success&tier=${tier}&billing=${billingCycle}`,
       `${baseUrl}/pricing?checkout=canceled`
     );
 
@@ -63,7 +80,7 @@ export async function POST(req: NextRequest) {
 
 /**
  * GET /api/checkout
- * Get available subscription tiers
+ * Get available subscription tiers with pricing info
  */
 export async function GET() {
   const tiers = Object.entries(SUBSCRIPTION_TIERS)
@@ -71,8 +88,10 @@ export async function GET() {
     .map(([key, config]) => ({
       id: key,
       name: config.name,
-      price: config.monthlyPrice,
+      monthlyPrice: config.monthlyPrice,
+      annualPrice: config.annualPrice,
       features: config.features,
+      popular: 'popular' in config ? config.popular : false,
     }));
 
   return NextResponse.json({ tiers });
