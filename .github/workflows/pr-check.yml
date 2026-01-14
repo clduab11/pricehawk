@@ -1,0 +1,239 @@
+name: PR Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  pr-info:
+    name: PR Information
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    outputs:
+      files_changed: ${{ steps.changes.outputs.files }}
+      has_src_changes: ${{ steps.changes.outputs.src }}
+      has_prisma_changes: ${{ steps.changes.outputs.prisma }}
+      has_docker_changes: ${{ steps.changes.outputs.docker }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            src:
+              - 'src/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'tsconfig.json'
+            prisma:
+              - 'prisma/**'
+            docker:
+              - 'Dockerfile*'
+              - 'docker-compose.yml'
+              - '.dockerignore'
+
+      - name: PR size check
+        uses: codelytv/pr-size-labeler@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          xs_label: 'size/XS'
+          xs_max_size: 10
+          s_label: 'size/S'
+          s_max_size: 100
+          m_label: 'size/M'
+          m_max_size: 500
+          l_label: 'size/L'
+          l_max_size: 1000
+          xl_label: 'size/XL'
+          fail_if_xl: false
+
+  lint-check:
+    name: Lint Check
+    runs-on: ubuntu-latest
+    needs: pr-info
+    if: needs.pr-info.outputs.has_src_changes == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
+
+      - name: Run ESLint with annotations
+        uses: reviewdog/action-eslint@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          eslint_flags: 'src/'
+
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    needs: pr-info
+    if: needs.pr-info.outputs.has_src_changes == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+  build-check:
+    name: Build Check
+    runs-on: ubuntu-latest
+    needs: [lint-check, type-check]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
+
+      - name: Build application
+        run: npm run build
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: 'pk_test_placeholder'
+
+  prisma-check:
+    name: Prisma Schema Check
+    runs-on: ubuntu-latest
+    needs: pr-info
+    if: needs.pr-info.outputs.has_prisma_changes == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
+      - name: Format check Prisma schema
+        run: npx prisma format --check || echo "Prisma schema formatting suggestions available"
+
+      - name: Comment on PR if schema changed
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## Prisma Schema Changes Detected
+
+            This PR includes changes to the Prisma schema. Please ensure:
+
+            - [ ] Migration has been created (`npx prisma migrate dev --name description`)
+            - [ ] Migration is safe for production (no data loss)
+            - [ ] Schema changes are documented
+            - [ ] Related code changes are included
+
+            Run `npx prisma migrate deploy` in production after merging.
+
+  docker-check:
+    name: Docker Build Check
+    runs-on: ubuntu-latest
+    needs: pr-info
+    if: needs.pr-info.outputs.has_docker_changes == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Lint Dockerfile (app)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: warning
+
+      - name: Lint Dockerfile (worker)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile.worker
+          failure-threshold: warning
+
+      - name: Build test (app)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: priceslash-app:pr-${{ github.event.pull_request.number }}
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          deny-licenses: GPL-3.0, AGPL-3.0
+
+  pr-summary:
+    name: PR Summary
+    runs-on: ubuntu-latest
+    needs: [pr-info, lint-check, type-check, build-check]
+    if: always()
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## PR Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ needs.lint-check.result == 'success' && 'Passed' || needs.lint-check.result == 'skipped' && 'Skipped' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Type Check | ${{ needs.type-check.result == 'success' && 'Passed' || needs.type-check.result == 'skipped' && 'Skipped' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build-check.result == 'success' && 'Passed' || needs.build-check.result == 'skipped' && 'Skipped' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
