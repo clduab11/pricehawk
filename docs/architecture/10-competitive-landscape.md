@@ -1,113 +1,134 @@
 # Competitive Landscape
 
-*Last updated: January 2026*
+*Last updated: January 15, 2026*
 
-This document provides an overview of the pricing error detection and deal alert market, including direct competitors, adjacent products, and Pricehawk's positioning.
+This document provides an overview of the pricing error detection market, focusing on **actual price glitch/error detection services** (not general deal sites or coupon platforms).
 
 ## Market Overview
 
-The deal hunting and pricing error detection market has grown significantly since 2024, driven by:
+The price glitch hunting market has grown significantly since 2024, driven by:
 
 - Increased consumer awareness of pricing errors
-- Growth of deal communities on Discord and Reddit
+- Growth of paid Discord/Telegram glitch communities
 - Social media virality of extreme discounts
 - Retailers' general tendency to honor most errors under certain thresholds
+- Rise of AI-powered detection tools
 
-## Direct Competitors
+## Direct Competitors (Price Glitch Focus)
 
-### Deal Alert Services
+### Paid Price Error Alert Services
 
-| Service | Type | Latency | Coverage | Pricing | Notes |
-|---------|------|---------|----------|---------|-------|
-| BrickSeek | Web/App | 15-30 min | Walmart, Target, CVS | Free + Pro ($4.99/mo) | Store inventory focus |
-| SlickDeals | Community | Variable | All retailers | Free + Cashback | User-submitted deals |
-| DealNews | Curated | 1-4 hours | All retailers | Free | Editorial picks |
-| Brad's Deals | Curated | 1-4 hours | All retailers | Free | Cashback affiliate model |
-| Dealmoon | Curated | Variable | US/China retailers | Free | Community + editorial |
+| Service | Pricing | Key Features | Latency | Market Position |
+|---------|---------|--------------|---------|-----------------|
+| **PriceHub** | $70/mo or $180/quarterly | AI-monitored alerts, web dashboard, community savings tracking ($125k+ claimed) | Minutes | Premium tier, established brand |
+| **Blackbox BTO 2.0** | Waitlist-based (~$50-100/mo est.) | "Local Glitch Engine" for in-store errors, retail arbitrage focus, $500-$2k/mo member claims | Real-time local | In-store specialist |
+| **Deal Soldier** | Discord sub (~$15-30/mo) | Clearance deals, penny deals, barcode scanning, Home Depot/Walmart focus | Manual posting | Budget-friendly, retail arbitrage |
 
-### Price Tracking Services
-
-| Service | Type | Focus | Pricing | Notes |
-|---------|------|-------|---------|-------|
-| CamelCamelCamel | Price tracker | Amazon only | Free | Price history charts |
-| Keepa | Price tracker | Amazon only | Free + Pro (€19/mo) | Chrome extension |
-| Honey (PayPal) | Browser extension | All retailers | Free | Coupon + price drop alerts |
-| PriceRunner | Comparison | EU retailers | Free | Affiliate model |
-| Idealo | Comparison | EU retailers | Free | Affiliate model |
-
-### Discord/Telegram Communities
+### Community-Driven Glitch Groups
 
 | Community | Type | Latency | Access | Notes |
 |-----------|------|---------|--------|-------|
-| Various glitch groups | Community-driven | Minutes | Invite-only | Manual posting by hunters |
-| AIO Bot communities | Automated + manual | Seconds-minutes | Paid membership | Often bundled with bots |
-| Reddit r/deals, r/glitches | Open community | Variable | Free | Quality varies |
+| **@PriceErrors** (Twitter/Discord) | Free Twitter + paid Discord | Variable | Mixed | Active community, restocks focus |
+| **Private Discord servers** | Invite-only communities | Minutes | $20-100/mo | Quality varies, dependent on hunters |
+| **AIO Bot communities** | Automated + manual | Seconds-minutes | Bundled with bots | Often sneaker/resale focused |
+| **Reddit r/glitches** | Open community | Variable | Free | Quality varies, often delayed |
 
-## Adjacent Products
+### Competitive Pricing Comparison
 
-### Browser Extensions
+| Tier | PriceHub | Blackbox | Deal Soldier | **Pricehawk** |
+|------|----------|----------|--------------|---------------|
+| Entry | $70/mo | Waitlist | ~$15/mo | **Free** |
+| Mid | - | - | ~$25/mo | **$15/mo (Pro)** |
+| Premium | $180/quarter | ~$100/mo | - | **$50/mo (Elite)** |
+| Annual Savings | 14% | N/A | N/A | **20%** |
 
-- **Honey**: Automatic coupon application, price drop alerts
-- **Rakuten**: Cashback + deal notifications
-- **Capital One Shopping**: Price comparison + coupons
-- **Klarna**: Buy now pay later + price comparisons
+## Adjacent Products (NOT Direct Competitors)
 
-### Subscription Box Services
+**Important:** These services focus on **legitimate sales/discounts**, not pricing errors:
 
-- **SampleSource**: Free product samples
-- **Daily Steals**: Daily email with one featured deal
+### Price Tracking (Sales Focus)
+| Service | Focus | Why NOT a Competitor |
+|---------|-------|---------------------|
+| CamelCamelCamel | Amazon price history | Tracks legitimate price drops, no error detection |
+| Keepa | Amazon price tracking | Historical data, alerts for sales not errors |
+| Honey/PayPal | Coupons + cashback | Legitimate discounts, coupon aggregation |
+| Rakuten | Cashback shopping | Affiliate rewards, not pricing errors |
 
-### Reseller Tools
+### General Deal Sites (Mixed Content)
+| Service | Focus | Why NOT a Competitor |
+|---------|-------|---------------------|
+| SlickDeals | Community deals | Price errors are secondary, mostly sales |
+| BrickSeek | Store inventory lookup | Clearance/inventory focus, not error detection |
+| DealNews | Curated editorial deals | Legitimate sales only |
 
-- **Jungle Scout**: Amazon product research
-- **Tactical Arbitrage**: Cross-marketplace arbitrage scanning
-- **SellerAmp**: Product sourcing for Amazon sellers
+### Reseller/Arbitrage Tools
 
-## Comparison Matrix
+| Tool | Focus | Why NOT a Competitor |
+|------|-------|---------------------|
+| Jungle Scout | Amazon product research | Sourcing analytics, not error detection |
+| Tactical Arbitrage | Cross-marketplace arbitrage | Price differential scanning, not errors |
+| SellerAmp | Amazon seller sourcing | Profitability analysis, not glitches |
 
-| Feature | Pricehawk | SlickDeals | BrickSeek | Honey | Discord Groups |
-|---------|-----------|------------|-----------|-------|----------------|
-| **Real-time alerts** | ⚡ <5 min | ❌ Variable | ⚠️ 15-30 min | ❌ No | ⚠️ Manual |
-| **AI validation** | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No |
-| **Retailer coverage** | 100+ | 500+ | 3-5 | 30K+ | Variable |
-| **Pricing error focus** | ✅ Primary | ❌ Secondary | ⚠️ Inventory | ❌ No | ✅ Yes |
+## Comparison Matrix (Price Glitch Services)
+
+| Feature | **Pricehawk** | PriceHub | Blackbox BTO | Deal Soldier | Discord Groups |
+|---------|---------------|----------|--------------|--------------|----------------|
+| **Real-time alerts** | ⚡ <5 min | ⚡ Minutes | ⚡ Real-time (local) | ⚠️ Manual | ⚠️ Variable |
+| **AI validation** | ✅ DeepSeek V3 | ✅ Proprietary | ❌ No | ❌ No | ❌ No |
+| **Online retailers** | ✅ 100+ | ✅ Yes | ❌ Local only | ⚠️ Limited | ✅ Yes |
+| **In-store glitches** | 🔜 Coming | ❌ No | ✅ Primary focus | ✅ Yes | ⚠️ Some |
+| **Entry price** | **$0 (Free tier)** | $70/mo | Waitlist | ~$15/mo | $0-100/mo |
 | **API access** | ✅ Elite tier | ❌ No | ❌ No | ❌ No | ❌ No |
-| **Mobile app** | 🔜 Coming | ✅ Yes | ✅ Yes | ✅ Yes | ❌ No |
-| **Notification speed** | Fastest | Slow | Medium | Slow | Fast (manual) |
-| **Reliability** | Enterprise | Community | Enterprise | Enterprise | Variable |
+| **Notification channels** | 9 providers | Web + Mobile | App | Discord | Discord |
+| **Mobile app** | 🔜 Coming | ✅ Yes | ✅ Yes | ❌ No | ❌ No |
+| **Reliability** | Enterprise SLA | Enterprise | App-based | Manual | Variable |
 
 ## Pricehawk Positioning
 
-### Unique Value Propositions
+### Why We Win Against PriceHub ($70/mo)
 
-1. **Speed**: Automated detection within seconds of price changes, not hours
-2. **AI Validation**: DeepSeek V3 filters false positives (sales vs. errors)
-3. **Enterprise Infrastructure**: Reliable, scalable, monitored 24/7
-4. **Multi-channel Delivery**: Discord, Email, SMS, Telegram, Webhooks
-5. **Subscription Tiers**: From free community to enterprise API access
+| Factor | PriceHub | Pricehawk | Advantage |
+|--------|----------|-----------|-----------|
+| Entry Price | $70/mo | Free tier | **70% lower barrier** |
+| Pro Tier | N/A | $15/mo | **79% cheaper** |
+| AI Engine | Proprietary | DeepSeek V3 (transparent) | Similar capability |
+| Channels | Web + App | 9 providers (Discord, SMS, Telegram, WhatsApp, etc.) | **More flexibility** |
+| API Access | None | Elite tier webhooks | **Developer-friendly** |
+
+### Why We Win Against Blackbox BTO (In-Store Focus)
+
+| Factor | Blackbox | Pricehawk | Advantage |
+|--------|----------|-----------|-----------|
+| Focus | Local/in-store only | Online + (coming: in-store) | **Broader coverage** |
+| Availability | Waitlist | Open enrollment | **Immediate access** |
+| Pricing | ~$50-100/mo est. | $0-50/mo range | **More tiers** |
+| Scalability | Individual hunters | Automated AI | **Consistent detection** |
 
 ### Target Segments
 
-| Segment | Primary Pain Point | Pricehawk Solution |
-|---------|-------------------|-------------------|
-| Casual deal hunters | Miss deals before they expire | Real-time alerts |
-| Power users | Too many false positives | AI validation |
-| Resellers | Need API access + speed | Elite tier + webhooks |
-| Communities | Managing deal flow | Integration APIs |
+| Segment | Pain Point | Why Pricehawk Wins |
+|---------|-----------|-------------------|
+| Casual deal hunters | Miss deals, $70/mo too expensive | Free tier + $15 Pro |
+| Power users | Too many false positives | DeepSeek V3 AI validation |
+| Resellers | Need API + automation | Elite tier webhooks |
+| Community operators | Managing deal flow | Integration APIs + multi-channel |
 
 ### Competitive Advantages
 
-1. **Detection Latency**: Fastest time from price change to notification
-2. **Accuracy**: AI-powered validation reduces noise
-3. **Scalability**: Enterprise infrastructure, not Discord bots
-4. **Monetization Model**: SaaS subscriptions, not just affiliate fees
-5. **Data Assets**: Historical pricing data for trend analysis
+1. **Price Leadership**: Only service with meaningful free tier
+2. **AI Transparency**: Using known model (DeepSeek V3) vs proprietary black boxes
+3. **Channel Diversity**: 9 notification providers vs competitors' 1-2
+4. **Enterprise SLA**: Guaranteed uptime vs Discord bot reliability
+5. **Developer Access**: API/webhooks for automation (Elite tier)
 
-### Competitive Challenges
+### Competitive Challenges & Mitigations
 
-1. **Retailer Coverage**: Community sites have broader coverage (we focus on depth)
-2. **Brand Awareness**: Established players have larger audiences
-3. **Free Tier Expectations**: Users expect significant free value
+| Challenge | Mitigation Strategy |
+|-----------|---------------------|
+| PriceHub brand awareness | Lower price + more channels = viral growth |
+| Blackbox's in-store focus | Phase 4: Add in-store glitch detection |
+| Discord groups' speed (human hunters) | AI detects systematically, humans miss patterns |
+| No mobile app yet | PWA + mobile push in Q2 2026 roadmap |
 
 ## Market Trends
 
@@ -147,9 +168,14 @@ The deal hunting and pricing error detection market has grown significantly sinc
 
 ## References
 
-- SlickDeals: https://slickdeals.net
-- BrickSeek: https://brickseek.com
-- CamelCamelCamel: https://camelcamelcamel.com
-- Keepa: https://keepa.com
-- Honey: https://joinhoney.com
-- DealNews: https://dealnews.com
+### Direct Competitors (Price Glitch Services)
+- PriceHub: https://pricehub.vip
+- Blackbox BTO: https://blackboxfiles.com
+- @PriceErrors: https://twitter.com/PriceErrors
+
+### Adjacent Services (NOT competitors)
+- SlickDeals: https://slickdeals.net (general deals, price errors secondary)
+- BrickSeek: https://brickseek.com (inventory/clearance lookup)
+- CamelCamelCamel: https://camelcamelcamel.com (Amazon price history, sales only)
+- Keepa: https://keepa.com (Amazon tracking, no error detection)
+- Honey: https://joinhoney.com (coupons/cashback, not errors)

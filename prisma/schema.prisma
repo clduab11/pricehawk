@@ -69,7 +69,7 @@ model UserPreference {
   discordUserId     String?   @map("discord_user_id")
   telegramChatId    String?   @map("telegram_chat_id")
   webhookUrl        String?   @map("webhook_url")
-  
+
   // Twitter OAuth Tokens
   twitterAccessToken  String?   @map("twitter_access_token")
   twitterRefreshToken String?   @map("twitter_refresh_token")
@@ -165,6 +165,7 @@ model ValidatedGlitch {
   anomaly       PricingAnomaly @relation(fields: [anomalyId], references: [id], onDelete: Cascade)
   product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
   notifications Notification[]
+  socialPosts   SocialPost[]
 
   @@index([isGlitch])
   @@index([validatedAt])
@@ -280,4 +281,39 @@ model ApiUsage {
   @@index([userId])
   @@index([window])
   @@map("api_usage")
+}
+
+model SocialPost {
+  id         String           @id @default(cuid())
+  platform   String // twitter, telegram, facebook
+  postId     String? // Platform-specific post ID
+  content    String
+  mediaUrls  String[]
+  glitchId   String?
+  glitch     ValidatedGlitch? @relation(fields: [glitchId], references: [id])
+  postedAt   DateTime         @default(now())
+  engagement Json? // likes, shares, clicks
+  status     String           @default("pending") // pending, posted, failed
+  error      String?
+  createdAt  DateTime         @default(now())
+
+  @@index([platform, postedAt])
+  @@index([glitchId])
+}
+
+model NewsletterIssue {
+  id            String    @id @default(cuid())
+  beehiivPostId String?
+  title         String
+  dealCount     Int
+  audienceType  String // free, paid
+  scheduledFor  DateTime
+  sentAt        DateTime?
+  opens         Int       @default(0)
+  clicks        Int       @default(0)
+  status        String    @default("draft")
+  createdAt     DateTime  @default(now())
+
+  @@index([scheduledFor])
+  @@index([audienceType])
 }

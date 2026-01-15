@@ -1,132 +1,103 @@
-## Build configurations
-x-app-build: &app-build
-  context: .
-  dockerfile: Dockerfile
-
-x-worker-build: &worker-build
-  context: .
-  dockerfile: Dockerfile.worker
+version: '3.8'
 
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-pricehawk}
+      POSTGRES_USER: pricehawk
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: pricehawk
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
+      - postgres_data:/var/lib/postgresql/data
 
-  # Redis for queues and caching
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
     volumes:
-      - redis-data:/data
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
+      - redis_data:/data
 
-  # Next.js Application
   app:
-    build: *app-build
-    image: pricehawk-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: node server.js
+    environment:
+      DATABASE_URL: postgres://pricehawk:password@postgres:5432/pricehawk
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
     ports:
       - "3000:3000"
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-pricehawk}
-      - REDIS_URL=redis://redis:6379
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - NODE_ENV=production
-    env_file:
-      - .env.local
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
+      - postgres
+      - redis
 
-  # Background Worker for scraping jobs
-  worker:
-    build: *worker-build
-    image: pricehawk-worker
+  # Separate service for Scraper because it needs Playwright browsers
+  # We use the official Playwright image to ensure browsers are there
+  worker-scraper:
+    image: mcr.microsoft.com/playwright:v1.49.0-jammy
+    working_dir: /app
+    # We mount the code to run it
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    command: /bin/bash -c "npm install && npx prisma generate && npx tsx src/worker.ts"
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-pricehawk}
-      - REDIS_URL=redis://redis:6379
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - NODE_ENV=production
-    env_file:
-      - .env.local
+      DATABASE_URL: postgres://pricehawk:password@postgres:5432/pricehawk
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    command: npm run worker
-    restart: unless-stopped
+      - postgres
+      - redis
 
-  # Stream worker: validates anomalies (AI) and writes validated glitches
-  validator:
-    build: *worker-build
-    image: pricehawk-worker
+  # Other workers can use the base App image (lighter) or the same playwright image if code is shared
+  worker-validator:
+    build: .
+    command: tsx src/workers/anomaly-validator.ts
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-pricehawk}
-      - REDIS_URL=redis://redis:6379
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - NODE_ENV=production
-    env_file:
-      - .env.local
+      DATABASE_URL: postgres://pricehawk:password@postgres:5432/pricehawk
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    command: npm run worker:validate
-    restart: unless-stopped
+      - postgres
+      - redis
 
-  # Stream worker: sends notifications for confirmed glitches
-  notifier:
-    build: *worker-build
-    image: pricehawk-worker
+  worker-notify:
+    build: .
+    command: tsx src/workers/notification-sender.ts
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-pricehawk}
-      - REDIS_URL=redis://redis:6379
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - NODE_ENV=production
-    env_file:
-      - .env.local
+      DATABASE_URL: postgres://pricehawk:password@postgres:5432/pricehawk
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    command: npm run worker:notify
-    restart: unless-stopped
+      - postgres
+      - redis
+
+  worker-social:
+    build: .
+    command: tsx src/workers/social-poster.ts
+    environment:
+      DATABASE_URL: postgres://pricehawk:password@postgres:5432/pricehawk
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - postgres
+      - redis
+
+  worker-verifier:
+    build: .
+    command: tsx src/workers/deal-verifier.ts
+    environment:
+      DATABASE_URL: postgres://pricehawk:password@postgres:5432/pricehawk
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - postgres
+      - redis
 
 volumes:
-  postgres-data:
-  redis-data:
+  postgres_data:
+  redis_data:
