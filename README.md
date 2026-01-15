@@ -349,7 +349,7 @@ This software is dual-licensed:
 - Enterprise deployments (100+ users)
 - White-labeling or rebranding
 
-For commercial licensing inquiries, contact **chrisldukes@gmail.com** or visit [parallax-ai.app](https://parallax-ai.app).
+For commercial licensing inquiries, contact **info@parallax-ai.app** or visit [parallax-ai.app](https://parallax-ai.app).
 
 See [LICENSE](LICENSE) for full terms.
 
