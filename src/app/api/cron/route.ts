@@ -260,6 +260,14 @@ async function sendDailyDigest(): Promise<Record<string, unknown>> {
 }
 
 /**
+ * Convert a Prisma Decimal or number to a plain number
+ */
+function toNumber(value: number | { toNumber: () => number } | null | undefined, defaultValue: number = 0): number {
+  if (value == null) return defaultValue;
+  return typeof value === 'number' ? value : value.toNumber();
+}
+
+/**
  * Filter glitches based on user preferences
  */
 function filterGlitchesForUser(
@@ -288,26 +296,14 @@ function filterGlitchesForUser(
     }
 
     // Profit margin filter
-    const minMargin = preferences.minProfitMargin
-      ? typeof preferences.minProfitMargin === 'number'
-        ? preferences.minProfitMargin
-        : preferences.minProfitMargin.toNumber()
-      : 0;
+    const minMargin = toNumber(preferences.minProfitMargin, 0);
     if (glitch.savingsPercent < minMargin) {
       return false;
     }
 
     // Price range filter
-    const minPrice = preferences.minPrice
-      ? typeof preferences.minPrice === 'number'
-        ? preferences.minPrice
-        : preferences.minPrice.toNumber()
-      : 0;
-    const maxPrice = preferences.maxPrice
-      ? typeof preferences.maxPrice === 'number'
-        ? preferences.maxPrice
-        : preferences.maxPrice.toNumber()
-      : 10000;
+    const minPrice = toNumber(preferences.minPrice, 0);
+    const maxPrice = toNumber(preferences.maxPrice, 10000);
     if (glitch.glitchPrice < minPrice || glitch.glitchPrice > maxPrice) {
       return false;
     }

@@ -29,6 +29,14 @@ export interface DigestGlitch {
 }
 
 /**
+ * Convert a Prisma Decimal or number to a plain number
+ */
+function toNumber(value: number | { toNumber: () => number } | null | undefined): number {
+  if (value == null) return 0;
+  return typeof value === 'number' ? value : value.toNumber();
+}
+
+/**
  * Calculate a unified ranking score for a validated glitch
  * 
  * Scoring factors:
@@ -44,15 +52,8 @@ export function calculateGlitchRank(glitch: {
   confidence: number;
   jinaScore?: number | { toNumber: () => number } | null;
 }): number {
-  const profitMargin = typeof glitch.profitMargin === 'number' 
-    ? glitch.profitMargin 
-    : glitch.profitMargin.toNumber();
-  
-  const jinaScore = glitch.jinaScore == null 
-    ? 0 
-    : typeof glitch.jinaScore === 'number' 
-      ? glitch.jinaScore 
-      : glitch.jinaScore.toNumber();
+  const profitMargin = toNumber(glitch.profitMargin);
+  const jinaScore = toNumber(glitch.jinaScore);
 
   // Base score from profit margin and confidence
   const baseScore = profitMargin * 0.6 + glitch.confidence * 0.3;

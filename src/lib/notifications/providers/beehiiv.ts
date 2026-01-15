@@ -98,7 +98,10 @@ export async function publishDigest(
   });
 
   const title = `🦅 Top ${glitches.length} Price Glitches Today (${date})`;
-  const subtitle = `${glitches[0].savingsPercent}% off ${glitches[0].retailer} and ${glitches.length - 1} more deals`;
+  const otherCount = glitches.length - 1;
+  const subtitle = otherCount > 0
+    ? `${glitches[0].savingsPercent}% off ${glitches[0].retailer} and ${otherCount} more ${otherCount === 1 ? 'deal' : 'deals'}`
+    : `${glitches[0].savingsPercent}% off ${glitches[0].retailer}`;
   const content = formatGlitchesAsContent(glitches);
 
   try {
