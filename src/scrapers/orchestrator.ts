@@ -46,35 +46,52 @@ export class ScrapingOrchestrator {
 
     new Worker(
       'scraping-jobs',
-      async (job) => {
+      async (job: { data: RequestJobData; id?: string }) => {
         const { retailer, category, url } = job.data as RequestJobData;
         
         try {
           const config = this.retailers.find(r => r.retailer === retailer);
           if (!config) {
-            throw new Error(`Unknown retailer: ${retailer}`);
+             throw new Error(`Unknown retailer: ${retailer}`);
           }
 
-          const worker = new PlaywrightWorker(
-            {
-              retailer: config.retailer,
-              targetUrl: url,
-              selectors: config.selectors,
-              antiBot: true,
-              rateLimit: config.rateLimit,
-            },
-            this.proxyManager,
-            this.rateLimiter
-          );
+          let products: ProductData[] = [];
 
-          await worker.initialize();
-          const products = await worker.scrapeProducts({
-            id: job.id!,
-            url,
-            retailer,
-            category,
-          });
-          await worker.cleanup();
+          if (config.strategy === 'jina') {
+             // Jina Strategy
+             const { JinaWorker } = await import('./jina-worker.js');
+             const worker = new JinaWorker(config);
+             await worker.initialize();
+             products = await worker.scrapeProducts({
+                id: job.id!,
+                url,
+                retailer,
+                category,
+             });
+             await worker.cleanup();
+          } else {
+             // Playwright Strategy (Default)
+             const worker = new PlaywrightWorker(
+               {
+                 retailer: config.retailer,
+                 targetUrl: url,
+                 selectors: config.selectors,
+                 antiBot: true,
+                 rateLimit: config.rateLimit,
+               },
+               this.proxyManager,
+               this.rateLimiter
+             );
+   
+             await worker.initialize();
+             products = await worker.scrapeProducts({
+               id: job.id!,
+               url,
+               retailer,
+               category,
+             });
+             await worker.cleanup();
+          }
 
           // Save to database
           await this.saveProducts(products, retailer, category);
@@ -277,6 +294,35 @@ export class ScrapingOrchestrator {
         antiBot: true,
       },
       // Add more retailers...
+      {
+        retailer: 'bestbuy',
+        targetUrl: 'https://www.bestbuy.com/site/electronics/computers-pcs/abcat0500000.c?id=abcat0500000',
+        selectors: {
+          container: '.sku-item',
+          title: '.sku-header a',
+          price: '.priceView-customer-price span',
+          originalPrice: '.pricing-price__regular-price',
+          link: '.sku-header a',
+          image: '.product-image',
+        },
+        rateLimit: 10,
+        antiBot: true,
+      },
+      {
+        retailer: 'target',
+        targetUrl: 'https://www.target.com/c/electronics/-/N-5xtg6',
+        selectors: {
+          container: '[data-test="product-card"]',
+          title: '[data-test="product-title"]',
+          price: '[data-test="current-price"] span',
+          originalPrice: '[data-test="comparison-price"]',
+          link: '[data-test="product-title"]',
+          image: '[data-test="product-image"] img',
+        },
+        rateLimit: 15,
+        antiBot: true,
+      },
     ];
   }
 }
+

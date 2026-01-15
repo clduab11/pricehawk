@@ -12,7 +12,8 @@
     "worker:validate": "tsx src/workers/anomaly-validator.ts",
     "worker:notify": "tsx src/workers/notification-sender.ts",
     "db:seed": "tsx prisma/seed.ts",
-    "prisma:generate": "prisma generate --no-hints"
+    "prisma:generate": "prisma generate --no-hints",
+    "test": "vitest"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.36.7",
@@ -38,19 +39,24 @@
     "tailwind-merge": "^3.4.0",
     "tsx": "^4.0.0",
     "twilio": "^5.11.2",
+    "twitter-api-v2": "^1.29.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.1",
     "@types/node": "^25.0.8",
     "@types/pg": "^8.16.0",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@vitejs/plugin-react": "^5.1.2",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
+    "jsdom": "^27.4.0",
     "postcss": "^8",
     "prisma": "^7.2.0",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.17"
   },
   "overrides": {
     "glob": "10.5.0"

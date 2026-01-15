@@ -18,7 +18,7 @@ export class SMSProvider implements NotificationProvider {
     this.toNumbers = (process.env.SMS_NOTIFY_NUMBERS || '').split(',').filter(Boolean);
   }
 
-  async send(glitch: ValidatedGlitch): Promise<NotificationResult> {
+  async send(glitch: ValidatedGlitch, to?: string): Promise<NotificationResult> {
     if (!this.accountSid || !this.authToken || !this.fromNumber) {
       return {
         success: false,
@@ -28,7 +28,9 @@ export class SMSProvider implements NotificationProvider {
       };
     }
 
-    if (this.toNumbers.length === 0) {
+    const recipients = to ? [to] : this.toNumbers;
+
+    if (recipients.length === 0) {
       return {
         success: false,
         channel: 'sms',
@@ -40,7 +42,7 @@ export class SMSProvider implements NotificationProvider {
     try {
       const message = this.formatMessage(glitch);
       const results = await Promise.allSettled(
-        this.toNumbers.map(number => this.sendSMS(number.trim(), message))
+        recipients.map(number => this.sendSMS(number.trim(), message))
       );
 
       const successful = results.filter(r => r.status === 'fulfilled').length;

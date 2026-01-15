@@ -7,4 +7,5 @@ export interface ScraperConfig {
   selectors: Record<string, string>;
   antiBot: boolean;
   rateLimit: number; // requests per minute
+  strategy?: 'playwright' | 'jina'; // Default to 'playwright'
 }

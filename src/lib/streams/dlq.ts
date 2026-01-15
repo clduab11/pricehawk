@@ -1,5 +1,6 @@
 
 import { pushToList, getKeys, getListLength } from '@/lib/clients/redis';
+import { alertService } from '@/lib/monitoring/alerts';
 
 export const DLQ_RETENTION_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
@@ -22,6 +23,14 @@ export async function moveToDLQ(
   try {
     await pushToList(dlqKey, JSON.stringify(dlqEntry));
     console.log(`[DLQ] Moved failed entry ${entryId} from ${originalStreamKey} to ${dlqKey}`);
+    
+    // Send Alert
+    await alertService.sendAlert('Stream Entry Moved to DLQ', error, {
+      stream: originalStreamKey,
+      entryId,
+      payload: typeof payload === 'object' ? JSON.stringify(payload).substring(0, 200) : String(payload).substring(0, 200)
+    });
+
   } catch (err) {
     console.error(`[DLQ] FATAL: Failed to move entry to DLQ`, err);
   }

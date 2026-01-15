@@ -3,7 +3,11 @@ import { FacebookProvider } from './providers/facebook';
 import { DiscordProvider } from './providers/discord';
 import { SMSProvider } from './providers/sms';
 
-type NotificationChannel = 'facebook' | 'discord' | 'sms';
+import { TelegramProvider } from './providers/telegram';
+import { WhatsAppProvider } from './providers/whatsapp';
+import { WebhookProvider } from './providers/webhook';
+
+type NotificationChannel = 'facebook' | 'discord' | 'sms' | 'telegram' | 'whatsapp' | 'webhook';
 
 /**
  * Notification Factory - Creates appropriate provider based on channel
@@ -26,6 +30,12 @@ export class NotificationFactory {
         return new DiscordProvider();
       case 'sms':
         return new SMSProvider();
+      case 'telegram':
+        return new TelegramProvider();
+      case 'whatsapp':
+        return new WhatsAppProvider();
+      case 'webhook':
+        return new WebhookProvider();
       default:
         throw new Error(`Unknown notification channel: ${channel}`);
     }
@@ -37,8 +47,8 @@ export class NotificationFactory {
  * Orchestrates notifications across all channels with priority handling
  */
 export class NotificationManager {
-  // Priority order: Facebook > Discord > SMS
-  private readonly channelPriority: NotificationChannel[] = ['facebook', 'discord', 'sms'];
+  // Priority order: Facebook > Discord > SMS > WhatsApp > Telegram > Webhook
+  private readonly channelPriority: NotificationChannel[] = ['facebook', 'discord', 'sms', 'whatsapp', 'telegram', 'webhook'];
   private enabledChannels: Set<NotificationChannel>;
 
   constructor(channels?: NotificationChannel[]) {

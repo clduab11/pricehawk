@@ -43,50 +43,87 @@ interface FirecrawlResponse {
 /**
  * Scrape a URL using Firecrawl API with stealth mode
  */
+import { jinaReader } from './jina-reader';
+
+/**
+ * Scrape a URL using Firecrawl API with stealth mode, falling back to Jina Reader
+ */
 export async function scrapeUrl(options: FirecrawlScrapeOptions): Promise<FirecrawlResponse> {
-  if (!FIRECRAWL_API_KEY) {
-    console.warn('Firecrawl API key not configured');
-    return { success: false, error: 'Firecrawl API key not configured' };
+  // 1. Try Firecrawl
+  if (FIRECRAWL_API_KEY) {
+    try {
+      const requestBody: Record<string, unknown> = {
+        url: options.url,
+        formats: options.formats || ['markdown'],
+        includeTags: options.includeTags,
+        excludeTags: options.excludeTags,
+        waitFor: options.waitFor || 2000,
+        // Stealth mode options
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        },
+      };
+
+      // Add extract schema for structured data extraction
+      if (options.extract) {
+        requestBody.extract = options.extract;
+      }
+
+      const response = await fetch(`${FIRECRAWL_API_URL}/scrape`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+            return { success: true, data: data.data };
+        }
+      }
+      
+      console.warn(`Firecrawl failed, falling back to Jina Reader... Status: ${response.status}`);
+    } catch (error) {
+       console.warn('Firecrawl error, falling back to Jina Reader:', error);
+    }
+  } else {
+    console.warn('Firecrawl API key not configured, using Jina Reader directly.');
   }
 
+  // 2. Fallback to Jina Reader
   try {
-    const requestBody: Record<string, unknown> = {
-      url: options.url,
-      formats: options.formats || ['markdown'],
-      includeTags: options.includeTags,
-      excludeTags: options.excludeTags,
-      waitFor: options.waitFor || 2000,
-      // Stealth mode options
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      },
-    };
+     const jinaResult = await jinaReader.read(options.url, {
+        format: 'markdown',
+        withLinksSummary: true,
+        withGeneratedAlt: true
+     });
 
-    // Add extract schema for structured data extraction
-    if (options.extract) {
-      requestBody.extract = options.extract;
-    }
+     if (jinaResult && jinaResult.data) {
+        // Map Jina result to FirecrawlResponse structure
+        // Note: Jina does not do structured extraction automatically without an external LLM step.
+        // We populate the raw markdown/metadata so the caller has something.
+        return {
+           success: true,
+           data: {
+              markdown: jinaResult.data.content,
+              metadata: {
+                 title: jinaResult.data.title,
+                 description: jinaResult.data.description,
+                 url: jinaResult.data.url
+              }
+           }
+        };
+     }
+     
+     return { success: false, error: 'Jina Reader failed to retrieve content' };
 
-    const response = await fetch(`${FIRECRAWL_API_URL}/scrape`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      return { success: false, error: `Firecrawl API error: ${error}` };
-    }
-
-    const data = await response.json();
-    return { success: true, data };
   } catch (error) {
-    return {
+     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown scraping error',
+      error: error instanceof Error ? error.message : 'Unknown scraping error (Jina fallback)',
     };
   }
 }
@@ -126,7 +163,7 @@ export async function getHistoricalPrices(productUrl: string, days = 30): Promis
       orderBy: { scrapedAt: 'desc' },
     });
 
-    return history.map(row => Number(row.price));
+    return history.map((row: { price: any }) => Number(row.price));
   } catch (error) {
     console.error('Error fetching historical prices:', error);
     return [];

@@ -20,6 +20,7 @@ model User {
   stripeCustomerId String?  @unique @map("stripe_customer_id")
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
+  phoneNumber      String?  @map("phone_number")
 
   subscription Subscription?
   preferences  UserPreference?
@@ -61,11 +62,18 @@ model UserPreference {
   enableDiscord     Boolean   @default(true) @map("enable_discord")
   enableEmail       Boolean   @default(true) @map("enable_email")
   enableSMS         Boolean   @default(false) @map("enable_sms")
+  enableTelegram    Boolean   @default(false) @map("enable_telegram")
+  enableWhatsApp    Boolean   @default(false) @map("enable_whatsapp")
   enableDailyDigest Boolean   @default(false) @map("enable_daily_digest")
   lastDigestSentAt  DateTime? @map("last_digest_sent_at")
   discordUserId     String?   @map("discord_user_id")
   telegramChatId    String?   @map("telegram_chat_id")
   webhookUrl        String?   @map("webhook_url")
+  
+  // Twitter OAuth Tokens
+  twitterAccessToken  String?   @map("twitter_access_token")
+  twitterRefreshToken String?   @map("twitter_refresh_token")
+  twitterExpiresAt    DateTime? @map("twitter_expires_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
