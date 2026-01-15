@@ -128,7 +128,7 @@ Start with self-hosted DB/cache on VPS for lowest cost and full control. Move to
 | **Reddit (r/Deals)**    | 2.5M+ members         | 100+/day       | Free                   | Ads, affiliate          | $10K–$30K (Reddit-wide est.) | Threads, comments    |
 | **Reddit (r/Flipping)** | 500K+ members         | 10–30/day      | Free                   | Ads, affiliate          | $2K–$8K (Reddit-wide est.)   | Threads, comments    |
 | **Reddit (r/PricingErrors)** | 100K+ members    | 2–10/day       | Free                   | Ads, affiliate          | $500–$2K (Reddit-wide est.)  | Threads, comments    |
-| **PricingErrors.com**   | N/A (est. 1–5K users) | 5–20/day       | $5/mo, $15/mo          | Subscription            | $1K–$5K (est.)               | Email, Discord, SMS  |
+| **PricingErrors.com**   | ~1-5K users (est.)    | 5–20/day       | $5/mo, $15/mo          | Subscription            | $1K–$5K (est.)               | Email, Discord, SMS  |
 | **SlickDeals alerts**   | 100K+ (site-wide)     | 10–30/day      | Free, cashback         | Affiliate, ads          | $10K+ (site-wide est.)       | Email, push, site    |
 
 ### 2.2 Revenue Model Calculations
