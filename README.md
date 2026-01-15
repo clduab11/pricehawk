@@ -41,15 +41,15 @@ Pricehawk is a subscription-based platform that monitors 100+ retailer websites 
 
 ### Examples of Common Decimal-Error Pricing Patterns
 
-| Item Category | Typical List Price | Potential Glitch Price | Savings (Up To) |
-|---------------|-------------------|------------------------|-----------------|
-| Premium TVs (65"+) | $1,500-$2,000 | $150-$200 | $1,300-$1,800 |
-| Wireless Earbuds | $200-$300 | $20-$30 | $180-$270 |
-| Vacuum Cleaners | $600-$800 | $60-$80 | $520-$720 |
-| Gaming Consoles | $300-$400 | $30-$40 | $260-$360 |
-| Kitchen Appliances | $400-$500 | $40-$50 | $350-$450 |
+| Item Category      | Typical List Price | Potential Glitch Price | Savings (Up To) |
+| ------------------ | ------------------ | ---------------------- | --------------- |
+| Premium TVs (65"+) | $1,500-$2,000      | $150-$200              | $1,300-$1,800   |
+| Wireless Earbuds   | $200-$300          | $20-$30                | $180-$270       |
+| Vacuum Cleaners    | $600-$800          | $60-$80                | $520-$720       |
+| Gaming Consoles    | $300-$400          | $30-$40                | $260-$360       |
+| Kitchen Appliances | $400-$500          | $40-$50                | $350-$450       |
 
-*These illustrate typical decimal-error pricing scenarios where a decimal point shifts one or two places. Actual outcomes vary significantly by retailer, timing, and individual circumstance. Not all pricing errors are honored—retailers have varying policies on order fulfillment. Users should verify current prices and policies before purchasing.*
+_These illustrate typical decimal-error pricing scenarios where a decimal point shifts one or two places. Actual outcomes vary significantly by retailer, timing, and individual circumstance. Not all pricing errors are honored—retailers have varying policies on order fulfillment. Users should verify current prices and policies before purchasing._
 
 ---
 
@@ -89,12 +89,12 @@ Pricehawk is a subscription-based platform that monitors 100+ retailer websites 
 
 ### Detection Criteria
 
-| Error Type | Detection Method | Confidence |
-|------------|-----------------|------------|
-| Decimal Errors | Price ratio < 0.01 or > 100 | 95%+ |
-| Extreme Discounts | >70% off with Z-score > 3 | 80-90% |
-| Historical Anomalies | 3+ standard deviations below mean | 75-85% |
-| Coupon Stacking | Multiple discount detection | 65-75% |
+| Error Type           | Detection Method                  | Confidence |
+| -------------------- | --------------------------------- | ---------- |
+| Decimal Errors       | Price ratio < 0.01 or > 100       | 95%+       |
+| Extreme Discounts    | >70% off with Z-score > 3         | 80-90%     |
+| Historical Anomalies | 3+ standard deviations below mean | 75-85%     |
+| Coupon Stacking      | Multiple discount detection       | 65-75%     |
 
 ---
 
@@ -102,20 +102,20 @@ Pricehawk is a subscription-based platform that monitors 100+ retailer websites 
 
 ### Current Pricing
 
-| Feature | Free | Starter | Pro | Elite |
-|---------|------|---------|-----|-------|
-| **Price** | $0/mo | $5/mo | $15/mo | $50/mo |
-| **Annual Price** | - | $48/yr (20% off) | $144/yr (20% off) | $480/yr (20% off) |
-| **Notification Delay** | 7 days | 24 hours | < 5 minutes | Instant |
-| **Deals Per Week** | 5 | Unlimited | Unlimited | Unlimited |
-| **Email Notifications** | Weekly Digest | Daily | Real-time | Real-time |
-| **Discord Access** | - | Yes | Yes | Yes |
-| **SMS/Telegram** | - | - | Yes | Yes |
-| **Advanced Filters** | - | Basic | Full | Full |
-| **Historical Data** | - | - | 30 days | 90 days |
-| **API Access** | - | - | - | 1,000 req/day |
-| **Webhooks** | - | - | - | Yes |
-| **Priority Support** | - | - | - | Yes |
+| Feature                 | Free          | Starter          | Pro               | Elite             |
+| ----------------------- | ------------- | ---------------- | ----------------- | ----------------- |
+| **Price**               | $0/mo         | $5/mo            | $15/mo            | $50/mo            |
+| **Annual Price**        | -             | $48/yr (20% off) | $144/yr (20% off) | $480/yr (20% off) |
+| **Notification Delay**  | 7 days        | 24 hours         | < 5 minutes       | Instant           |
+| **Deals Per Week**      | 5             | Unlimited        | Unlimited         | Unlimited         |
+| **Email Notifications** | Weekly Digest | Daily            | Real-time         | Real-time         |
+| **Discord Access**      | -             | Yes              | Yes               | Yes               |
+| **SMS/Telegram**        | -             | -                | Yes               | Yes               |
+| **Advanced Filters**    | -             | Basic            | Full              | Full              |
+| **Historical Data**     | -             | -                | 30 days           | 90 days           |
+| **API Access**          | -             | -                | -                 | 1,000 req/day     |
+| **Webhooks**            | -             | -                | -                 | Yes               |
+| **Priority Support**    | -             | -                | -                 | Yes               |
 
 ### Launch Promotion (Through Q1 2026)
 
@@ -127,19 +127,19 @@ Pricehawk is a subscription-based platform that monitors 100+ retailer websites 
 
 ## Technology Stack
 
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| **Framework** | Next.js 14 (App Router) | Full-stack React framework |
-| **Language** | TypeScript 5.7 (strict) | Type-safe development |
-| **Database** | PostgreSQL 15 + Prisma 7 | Data persistence |
-| **Queue/Cache** | Redis 7 + BullMQ | Event streaming & job queue |
-| **Auth** | Clerk | Authentication & user management |
-| **Payments** | Stripe Billing | Subscription management |
-| **Scraping** | Firecrawl, Tavily, Playwright | Multi-provider web scraping |
-| **AI** | OpenRouter (DeepSeek V3) | Anomaly validation |
-| **Email** | Resend | Transactional email |
-| **SMS** | Twilio | Text notifications |
-| **Social** | Discord.js, Facebook Graph API | Community notifications |
+| Layer           | Technology                     | Purpose                          |
+| --------------- | ------------------------------ | -------------------------------- |
+| **Framework**   | Next.js 14 (App Router)        | Full-stack React framework       |
+| **Language**    | TypeScript 5.7 (strict)        | Type-safe development            |
+| **Database**    | PostgreSQL 15 + Prisma 7       | Data persistence                 |
+| **Queue/Cache** | Redis 7 + BullMQ               | Event streaming & job queue      |
+| **Auth**        | Clerk                          | Authentication & user management |
+| **Payments**    | Stripe Billing                 | Subscription management          |
+| **Scraping**    | Firecrawl, Tavily, Playwright  | Multi-provider web scraping      |
+| **AI**          | OpenRouter (DeepSeek V3)       | Anomaly validation               |
+| **Email**       | Resend                         | Transactional email              |
+| **SMS**         | Twilio                         | Text notifications               |
+| **Social**      | Discord.js, Facebook Graph API | Community notifications          |
 
 ---
 
@@ -249,45 +249,45 @@ docker compose logs -f app
 
 ### Architecture & Design
 
-- [System Architecture](docs/architecture.md) - High-level system design
-- [Scraping Engine](docs/01-scraping-engine.md) - Distributed scraping architecture
-- [Analysis Engine](docs/02-analysis-engine.md) - ML-based error detection
-- [Notification System](docs/03-notification-system.md) - Multi-channel delivery
-- [API Layer](docs/04-api-layer.md) - REST API endpoints
+- [System Architecture](docs/architecture/architecture.md) - High-level system design
+- [Scraping Engine](docs/architecture/01-scraping-engine.md) - Distributed scraping architecture
+- [Analysis Engine](docs/architecture/02-analysis-engine.md) - ML-based error detection
+- [Notification System](docs/architecture/03-notification-system.md) - Multi-channel delivery
+- [API Layer](docs/architecture/04-api-layer.md) - REST API endpoints
 
 ### Integration Guides
 
-- [Subscription Management](docs/05-subscription-management.md) - Stripe integration
-- [Frontend Architecture](docs/06-frontend-apps.md) - Next.js app structure
-- [Admin Dashboard](docs/07-admin-dashboard.md) - Operations interface
-- [Database Schema](docs/08-database-schema.md) - PostgreSQL design
-- [Jina.ai Integration](docs/09-jina-integration.md) - AI enrichment layer
+- [Subscription Management](docs/architecture/05-subscription-management.md) - Stripe integration
+- [Frontend Architecture](docs/architecture/06-frontend-apps.md) - Next.js app structure
+- [Admin Dashboard](docs/architecture/07-admin-dashboard.md) - Operations interface
+- [Database Schema](docs/architecture/08-database-schema.md) - PostgreSQL design
+- [Jina.ai Integration](docs/architecture/09-jina-integration.md) - AI enrichment layer
 
 ### Market Context
 
-- [Competitive Landscape](docs/10-competitive-landscape.md) - Market positioning and competitors
+- [Competitive Landscape](docs/architecture/10-competitive-landscape.md) - Market positioning and competitors
 
 ### Operations
 
-- [Installation Guide](docs/installation.md)
-- [Development Setup](docs/development.md)
-- [Environment Variables](docs/environment.md)
-- [Deployment Guide](docs/deployment.md)
-- [Monitoring & Alerting](docs/monitoring.md)
+- [Installation Guide](docs/guides/installation.md)
+- [Development Setup](docs/guides/development.md)
+- [Environment Variables](docs/guides/environment.md)
+- [Deployment Guide](docs/guides/deployment.md)
+- [Monitoring & Alerting](docs/guides/monitoring.md)
 
 ---
 
 ## API Endpoints
 
-| Endpoint | Method | Description | Auth Required |
-|----------|--------|-------------|---------------|
-| `/api/health` | GET | System health check | No |
-| `/api/scrape` | POST | Trigger URL scraping | Admin |
-| `/api/detect` | POST | Run anomaly detection | Admin |
-| `/api/notify` | POST | Send test notification | Admin |
-| `/api/checkout` | POST | Create checkout session | Yes |
-| `/api/billing/portal` | POST | Billing portal redirect | Yes |
-| `/api/webhooks/stripe` | POST | Stripe webhook handler | Signature |
+| Endpoint               | Method | Description             | Auth Required |
+| ---------------------- | ------ | ----------------------- | ------------- |
+| `/api/health`          | GET    | System health check     | No            |
+| `/api/scrape`          | POST   | Trigger URL scraping    | Admin         |
+| `/api/detect`          | POST   | Run anomaly detection   | Admin         |
+| `/api/notify`          | POST   | Send test notification  | Admin         |
+| `/api/checkout`        | POST   | Create checkout session | Yes           |
+| `/api/billing/portal`  | POST   | Billing portal redirect | Yes           |
+| `/api/webhooks/stripe` | POST   | Stripe webhook handler  | Signature     |
 
 ---
 
@@ -348,6 +348,7 @@ This software is dual-licensed:
 **Elastic License 2.0 (ELv2)** - For non-commercial use, personal projects, educational purposes, and internal business use.
 
 **Commercial License** - Required for:
+
 - Competing pricing error detection or deal alert services
 - Managed/hosted service offerings
 - Reselling the software or its output

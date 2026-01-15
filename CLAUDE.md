@@ -7,9 +7,11 @@
 **priceslash** is an enterprise-grade pricing error detection and monetization platform. It monitors 100+ retailer websites for pricing anomalies, validates them using AI, and delivers real-time notifications to subscribers through multiple channels.
 
 ### Core Value Proposition
+
 Discover pricing errors (decimal mistakes, database glitches, clearance issues) before they're widely known and deliver exclusive early access to paying subscribers.
 
 ### Business Model
+
 - **Tiered subscriptions**: Free, Starter ($5/mo), Pro ($15/mo), Elite ($50/mo)
 - **Affiliate revenue**: Commission from purchases via tracked links
 - **API access**: Enterprise tier for high-volume automated access
@@ -46,17 +48,17 @@ docker compose logs -f app     # Tail app logs
 
 ### Key File Locations
 
-| Purpose | Path |
-|---------|------|
-| API routes | `src/app/api/` |
-| Database schema | `prisma/schema.prisma` |
-| Prisma client | `src/db/index.ts` |
-| Environment template | `.env.example` |
-| Type definitions | `src/types/index.ts` |
-| Notification providers | `src/lib/notifications/providers/` |
-| Scraping logic | `src/scrapers/` and `src/lib/scraping/` |
-| AI validation | `src/lib/ai/validator.ts` |
-| Price analysis | `src/lib/analysis/detection.ts` |
+| Purpose                | Path                                    |
+| ---------------------- | --------------------------------------- |
+| API routes             | `src/app/api/`                          |
+| Database schema        | `prisma/schema.prisma`                  |
+| Prisma client          | `src/db/index.ts`                       |
+| Environment template   | `.env.example`                          |
+| Type definitions       | `src/types/index.ts`                    |
+| Notification providers | `src/lib/notifications/providers/`      |
+| Scraping logic         | `src/scrapers/` and `src/lib/scraping/` |
+| AI validation          | `src/lib/ai/validator.ts`               |
+| Price analysis         | `src/lib/analysis/detection.ts`         |
 
 ---
 
@@ -151,31 +153,31 @@ src/
 
 ### Core Technologies
 
-| Category | Technology | Version |
-|----------|------------|---------|
-| Framework | Next.js (App Router) | 14 |
-| Language | TypeScript | 5.7 (strict mode) |
-| Database | PostgreSQL | 15 |
-| ORM | Prisma (with PrismaPg adapter) | 7 |
-| Cache/Queue | Redis | 7 |
-| Task Queue | BullMQ | 5.0 |
-| Auth | Clerk | - |
-| Payments | Stripe | - |
+| Category    | Technology                     | Version           |
+| ----------- | ------------------------------ | ----------------- |
+| Framework   | Next.js (App Router)           | 14                |
+| Language    | TypeScript                     | 5.7 (strict mode) |
+| Database    | PostgreSQL                     | 15                |
+| ORM         | Prisma (with PrismaPg adapter) | 7                 |
+| Cache/Queue | Redis                          | 7                 |
+| Task Queue  | BullMQ                         | 5.0               |
+| Auth        | Clerk                          | -                 |
+| Payments    | Stripe                         | -                 |
 
 ### External Services
 
-| Service | Purpose | Env Key Prefix |
-|---------|---------|----------------|
-| Clerk | Authentication | `CLERK_` |
-| Stripe | Billing/subscriptions | `STRIPE_` |
-| Firecrawl | Web scraping API | `FIRECRAWL_` |
-| Tavily | Search/scraping API | `TAVILY_` |
-| OpenRouter | AI inference (DeepSeek V3) | `OPENROUTER_` |
-| Discord | Notifications | `DISCORD_` |
-| Twilio | SMS notifications | `TWILIO_` |
-| Resend | Email delivery | `RESEND_` |
-| Facebook | Page posts | `FACEBOOK_` |
-| Upstash | Cloud Redis (optional) | `UPSTASH_` |
+| Service    | Purpose                    | Env Key Prefix |
+| ---------- | -------------------------- | -------------- |
+| Clerk      | Authentication             | `CLERK_`       |
+| Stripe     | Billing/subscriptions      | `STRIPE_`      |
+| Firecrawl  | Web scraping API           | `FIRECRAWL_`   |
+| Tavily     | Search/scraping API        | `TAVILY_`      |
+| OpenRouter | AI inference (DeepSeek V3) | `OPENROUTER_`  |
+| Discord    | Notifications              | `DISCORD_`     |
+| Twilio     | SMS notifications          | `TWILIO_`      |
+| Resend     | Email delivery             | `RESEND_`      |
+| Facebook   | Page posts                 | `FACEBOOK_`    |
+| Upstash    | Cloud Redis (optional)     | `UPSTASH_`     |
 
 ---
 
@@ -184,17 +186,20 @@ src/
 ### Core Models
 
 **User & Subscriptions**
+
 - `User`: Clerk-synced users with Stripe customer IDs
 - `Subscription`: Tier tracking (free/starter/pro/elite)
 - `UserPreference`: Notification channels, filters, webhooks
 
 **Products & Pricing**
+
 - `Product`: Scraped product data (price, URL, retailer, stock)
 - `PriceHistory`: Historical pricing for Z-score calculations
 - `PricingAnomaly`: Detected anomalies (pre-validation)
 - `ValidatedGlitch`: Confirmed pricing errors (post-AI validation)
 
 **Operations**
+
 - `ScheduledJob`: Cron-like scheduled tasks
 - `JobRun`: Job execution history
 - `Notification`: Delivery records with status
@@ -227,11 +232,11 @@ Always use the `@/` alias for imports from `src/`:
 
 ```typescript
 // Good
-import { db } from '@/db';
-import { PricingAnomalySchema } from '@/types';
+import { db } from "@/db";
+import { PricingAnomalySchema } from "@/types";
 
 // Avoid
-import { db } from '../../db';
+import { db } from "../../db";
 ```
 
 ### API Response Format
@@ -242,14 +247,17 @@ All API endpoints should return consistent response structures:
 // Success response
 return NextResponse.json({
   success: true,
-  data: result
+  data: result,
 });
 
 // Error response
-return NextResponse.json({
-  success: false,
-  error: 'Description of what went wrong'
-}, { status: 400 });
+return NextResponse.json(
+  {
+    success: false,
+    error: "Description of what went wrong",
+  },
+  { status: 400 }
+);
 ```
 
 ### Error Handling
@@ -261,11 +269,14 @@ try {
   const result = await someOperation();
   return NextResponse.json({ success: true, data: result });
 } catch (error) {
-  console.error('[endpoint-name] Error:', error);
-  return NextResponse.json({
-    success: false,
-    error: 'Operation failed'
-  }, { status: 500 });
+  console.error("[endpoint-name] Error:", error);
+  return NextResponse.json(
+    {
+      success: false,
+      error: "Operation failed",
+    },
+    { status: 500 }
+  );
 }
 ```
 
@@ -317,7 +328,7 @@ free < starter < pro < elite
 ### Access Control
 
 ```typescript
-import { hasAccess, SubscriptionTier } from '@/lib/subscription';
+import { hasAccess, SubscriptionTier } from "@/lib/subscription";
 
 // Check if user can access a feature
 if (hasAccess(userTier, SubscriptionTier.PRO)) {
@@ -327,13 +338,13 @@ if (hasAccess(userTier, SubscriptionTier.PRO)) {
 
 ### Tier Features
 
-| Feature | Free | Starter | Pro | Elite |
-|---------|------|---------|-----|-------|
-| Daily digest | Weekly | Daily | Real-time | Priority |
-| Notification delay | 24hr | 24hr | <5min | Instant |
-| Channels | Email | Email+Discord | All | All+Webhooks |
-| API access | - | - | - | 1000 req/day |
-| Historical data | - | - | Yes | Yes |
+| Feature            | Free   | Starter       | Pro       | Elite        |
+| ------------------ | ------ | ------------- | --------- | ------------ |
+| Daily digest       | Weekly | Daily         | Real-time | Priority     |
+| Notification delay | 24hr   | 24hr          | <5min     | Instant      |
+| Channels           | Email  | Email+Discord | All       | All+Webhooks |
+| API access         | -      | -             | -         | 1000 req/day |
+| Historical data    | -      | -             | Yes       | Yes          |
 
 ---
 
@@ -392,6 +403,7 @@ docker compose up --scale validator=3 --scale notifier=2
 ### Current State
 
 The project currently relies on:
+
 - TypeScript strict mode for type safety
 - Zod schemas for runtime validation
 - ESLint for code quality
@@ -412,6 +424,7 @@ curl http://localhost:3000/api/health
 ### Recommended Testing Setup (TODO)
 
 For future implementation:
+
 - Jest or Vitest for unit tests
 - Supertest for API integration tests
 - Playwright Test for E2E tests
@@ -475,8 +488,8 @@ npm run dev
 
 ```typescript
 // src/app/api/example/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 const RequestSchema = z.object({
   name: z.string().min(1),
@@ -492,17 +505,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        success: false,
-        error: 'Validation failed',
-        details: error.errors
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Validation failed",
+          details: error.errors,
+        },
+        { status: 400 }
+      );
     }
-    console.error('[example] Error:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'Internal server error'
-    }, { status: 500 });
+    console.error("[example] Error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Internal server error",
+      },
+      { status: 500 }
+    );
   }
 }
 ```
@@ -565,26 +584,31 @@ docker compose run --rm app npx prisma migrate deploy
 ### Common Issues
 
 **Prisma client not found**
+
 ```bash
 npm run prisma:generate
 ```
 
 **Database connection failed**
+
 - Check `DATABASE_URL` format
 - Ensure PostgreSQL is running
 - Check network connectivity
 
 **Redis connection failed**
+
 - Check `REDIS_URL` format
 - Ensure Redis is running
 - For Upstash, check `UPSTASH_REDIS_REST_URL`
 
 **Worker not processing events**
+
 - Check Redis stream names match
 - Verify stream consumer group exists
 - Check for errors in worker logs
 
 **Stripe webhook failures**
+
 - Verify `STRIPE_WEBHOOK_SECRET` matches
 - Check endpoint URL is publicly accessible
 - Use Stripe CLI for local testing: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
@@ -652,14 +676,14 @@ redis-cli XINFO STREAM price:anomaly:detected
 
 ## Documentation Links
 
-- [Scraping Engine Architecture](docs/01-scraping-engine.md)
-- [Price Analysis & ML Models](docs/02-analysis-engine.md)
-- [Notification System Design](docs/03-notification-system.md)
-- [API Layer Implementation](docs/04-api-layer.md)
-- [Stripe Integration Guide](docs/05-subscription-management.md)
-- [Frontend Architecture](docs/06-frontend-apps.md)
-- [Admin Dashboard](docs/07-admin-dashboard.md)
-- [Database Schema & Migrations](docs/08-database-schema.md)
+- [Scraping Engine Architecture](docs/architecture/01-scraping-engine.md)
+- [Price Analysis & ML Models](docs/architecture/02-analysis-engine.md)
+- [Notification System Design](docs/architecture/03-notification-system.md)
+- [API Layer Implementation](docs/architecture/04-api-layer.md)
+- [Stripe Integration Guide](docs/architecture/05-subscription-management.md)
+- [Frontend Architecture](docs/architecture/06-frontend-apps.md)
+- [Admin Dashboard](docs/architecture/07-admin-dashboard.md)
+- [Database Schema & Migrations](docs/architecture/08-database-schema.md)
 
 ---
 
@@ -673,4 +697,4 @@ redis-cli XINFO STREAM price:anomaly:detected
 
 ---
 
-*Last updated: January 2026*
+_Last updated: January 2026_

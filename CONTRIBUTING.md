@@ -1,6 +1,7 @@
 # Contributing
 
 Thanks for helping improve this project. This repo contains both:
+
 - Reference documentation under `docs/`
 - A working Next.js 14 + TypeScript implementation under `src/`
 
@@ -29,6 +30,5 @@ Thanks for helping improve this project. This repo contains both:
 ## Pull Requests
 
 - Include a short description of the problem and the approach.
-- If you add/change an API route, update `docs/api-reference.md`.
-- If you add/change DB models, include a migration and update `docs/08-database-schema.md`.
-
+- If you add/change an API route, update `docs/api/api-reference.md`.
+- If you add/change DB models, include a migration and update `docs/architecture/08-database-schema.md`.
