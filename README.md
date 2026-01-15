@@ -306,7 +306,7 @@ Price glitches typically follow this lifecycle:
 2. **5-15 minutes**: Early discoverers place orders
 3. **15-30 minutes**: Spread across Discord/Reddit communities
 4. **30-60 minutes**: Goes viral, retailer notices
-5. **60+ minutes**: Price corrected, orders may be cancelled
+5. **60+ minutes**: Price corrected, orders may be canceled
 
 **PriceHawk subscribers get alerts in Phase 1-2**, while public communities are still in Phase 3-4.
 
