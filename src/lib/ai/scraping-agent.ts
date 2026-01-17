@@ -1335,6 +1335,17 @@ export class MandatoryToolUseError extends Error {
 }
 
 /**
+ * Error thrown when a disabled tool is attempted to be executed
+ */
+export class ToolNotEnabledError extends Error {
+  constructor(iteration: number, toolName: string, enabledTools: string[]) {
+    const enabledList = enabledTools.length > 0 ? enabledTools.join(', ') : 'none';
+    super(`Tool '${toolName}' is not enabled at iteration ${iteration}. Enabled tools: ${enabledList}`);
+    this.name = 'ToolNotEnabledError';
+  }
+}
+
+/**
  * Agent execution state
  */
 export interface AgentState {
@@ -1438,6 +1449,35 @@ export class ScrapingAgent {
 
     for (const call of toolCalls) {
       const startTime = Date.now();
+      
+      // Validate tool is enabled before execution
+      if (!this.config.enabledTools.includes(call.name)) {
+        const duration = Date.now() - startTime;
+        const result: ToolResult = {
+          success: false,
+          error: `Tool '${call.name}' is not enabled. Enabled tools: ${this.config.enabledTools.length > 0 ? this.config.enabledTools.join(', ') : 'none'}`
+        };
+        
+        results.push({
+          id: call.id,
+          name: call.name,
+          arguments: call.arguments,
+          result,
+          duration,
+        });
+
+        // Track in history
+        this.state.toolCallHistory.push({
+          iteration: this.state.iteration,
+          toolName: call.name,
+          success: false,
+          duration,
+        });
+
+        this.state.totalToolCalls++;
+        continue;
+      }
+      
       const result = await executeTool(call.name, call.arguments);
       const duration = Date.now() - startTime;
 
