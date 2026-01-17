@@ -1,11 +1,12 @@
 import { PricingAnomaly, ValidatedGlitch, ValidationResult } from '@/types';
 import { publishConfirmedGlitch } from '@/lib/clients/redis';
 import { isJinaEnabled, scoreGlitch } from '@/lib/ai/jina';
+import { ModelConfig } from './models';
+import { getModelSelector, initializeModelSelector } from './model-selector';
 
 // OpenRouter API configuration
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const MODEL = 'deepseek/deepseek-chat'; // DeepSeek V3
 
 // System prompt for glitch analysis
 const SYSTEM_PROMPT = `You are an AI expert in e-commerce pricing analysis. Your job is to determine if a price is a genuine pricing error (glitch) or a legitimate sale/discount.
@@ -48,16 +49,64 @@ interface OpenRouterResponse {
 }
 
 /**
- * Validate a pricing anomaly using AI (OpenRouter/DeepSeek)
+ * Validate a pricing anomaly using AI via OpenRouter
+ * Uses weighted round-robin across 15 free models
  */
 export async function validateAnomaly(anomaly: PricingAnomaly): Promise<ValidationResult> {
   if (!OPENROUTER_API_KEY) {
     console.warn('OpenRouter API key not configured');
-    // Return a conservative estimate based on rule-based logic
     return fallbackValidation(anomaly);
   }
 
+  const selector = getModelSelector();
   const userPrompt = formatAnomalyForAI(anomaly);
+
+  // Try with selected model, then fallback to alternatives
+  let lastError: Error | null = null;
+  let attemptsRemaining = 3; // Max 3 different models
+
+  while (attemptsRemaining > 0) {
+    const { model, effectiveWeight } = await selector.selectModel();
+    const startTime = Date.now();
+
+    try {
+      const result = await callOpenRouterAPI(model, userPrompt);
+
+      // Record success
+      const latency = Date.now() - startTime;
+      await selector.recordSuccess(model.id, latency);
+
+      console.log(
+        `[AI Validator] Success with ${model.name} (weight: ${effectiveWeight}, latency: ${latency}ms)`
+      );
+
+      return result;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      await selector.recordFailure(model.id, lastError);
+
+      console.warn(
+        `[AI Validator] Failed with ${model.name}: ${lastError.message}, trying next model...`
+      );
+
+      attemptsRemaining--;
+    }
+  }
+
+  // All models failed, use fallback
+  console.error('[AI Validator] All models failed, using rule-based fallback');
+  return fallbackValidation(anomaly);
+}
+
+/**
+ * Call the OpenRouter API with a specific model
+ */
+async function callOpenRouterAPI(
+  model: ModelConfig,
+  userPrompt: string
+): Promise<ValidationResult> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), model.timeoutMs);
 
   try {
     const response = await fetch(OPENROUTER_API_URL, {
@@ -69,7 +118,7 @@ export async function validateAnomaly(anomaly: PricingAnomaly): Promise<Validati
         'X-Title': 'pricehawk',
       },
       body: JSON.stringify({
-        model: MODEL,
+        model: model.id,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: userPrompt },
@@ -78,24 +127,23 @@ export async function validateAnomaly(anomaly: PricingAnomaly): Promise<Validati
         max_tokens: 500,
         response_format: { type: 'json_object' },
       }),
+      signal: controller.signal,
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('OpenRouter API error:', error);
-      return fallbackValidation(anomaly);
+      const errorText = await response.text();
+      throw new Error(`API error ${response.status}: ${errorText}`);
     }
 
     const data: OpenRouterResponse = await response.json();
-    
+
     if (data.error) {
-      console.error('OpenRouter error:', data.error.message);
-      return fallbackValidation(anomaly);
+      throw new Error(`OpenRouter error: ${data.error.message}`);
     }
 
     const content = data.choices[0]?.message?.content;
     if (!content) {
-      return fallbackValidation(anomaly);
+      throw new Error('Empty response from model');
     }
 
     // Parse AI response
@@ -106,9 +154,8 @@ export async function validateAnomaly(anomaly: PricingAnomaly): Promise<Validati
       reasoning: parsed.reasoning ?? 'AI analysis completed',
       glitch_type: parsed.glitch_type ?? 'unknown',
     };
-  } catch (error) {
-    console.error('Error calling OpenRouter:', error);
-    return fallbackValidation(anomaly);
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
@@ -119,7 +166,7 @@ function formatAnomalyForAI(anomaly: PricingAnomaly): string {
   // Use non-null assertion or optional chaining for optional product properties
   const product = anomaly.product!;
   const { anomalyType, zScore, discountPercentage, initialConfidence } = anomaly;
-  
+
   return `Analyze this potential pricing error:
 
 Product: ${product.title}
@@ -147,7 +194,7 @@ Is this a pricing glitch or a legitimate sale?`;
  */
 function fallbackValidation(anomaly: PricingAnomaly): ValidationResult {
   const { discountPercentage, zScore, anomalyType, initialConfidence } = anomaly;
-  
+
   // Rule-based decision making
   let isGlitch = false;
   let confidence = initialConfidence;
@@ -307,7 +354,7 @@ function estimateGlitchDuration(glitchType: ValidationResult['glitch_type']): st
  */
 async function updateAnomalyStatus(anomalyId: string, status: PricingAnomaly['status']): Promise<void> {
   const { db } = await import('@/db');
-  
+
   try {
     await db.pricingAnomaly.update({
       where: { id: anomalyId },
@@ -323,7 +370,7 @@ async function updateAnomalyStatus(anomalyId: string, status: PricingAnomaly['st
  */
 async function saveValidatedGlitch(glitch: ValidatedGlitch): Promise<void> {
   const { db } = await import('@/db');
-  
+
   try {
     await db.validatedGlitch.create({
       data: {
@@ -349,7 +396,7 @@ async function saveValidatedGlitch(glitch: ValidatedGlitch): Promise<void> {
  */
 async function updateGlitchJinaScore(glitchId: string, jinaScore: number): Promise<void> {
   const { db } = await import('@/db');
-  
+
   try {
     await db.validatedGlitch.update({
       where: { id: glitchId },
@@ -360,5 +407,30 @@ async function updateGlitchJinaScore(glitchId: string, jinaScore: number): Promi
     });
   } catch (error) {
     console.error('Error updating glitch Jina score:', error);
+  }
+}
+
+/**
+ * Get current model selector statistics
+ */
+export function getValidatorStats() {
+  const selector = getModelSelector();
+  return selector.getStats();
+}
+
+/**
+ * Initialize the validator (call at app startup)
+ */
+export async function initializeValidator(): Promise<void> {
+  try {
+    // Try to initialize with Redis if available
+    const { getRedisClient } = await import('@/lib/clients/redis');
+    const redis = await getRedisClient();
+    await initializeModelSelector(redis as any);
+    console.log('[AI Validator] Initialized with Redis-backed model selector');
+  } catch (error) {
+    // Initialize without Redis
+    await initializeModelSelector();
+    console.log('[AI Validator] Initialized with in-memory model selector');
   }
 }
