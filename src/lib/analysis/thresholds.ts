@@ -74,9 +74,8 @@ export function resolveCategoryKey(category: string | null | undefined): string 
  * Get thresholds for a specific category, falling back to default if not found
  */
 export function getThresholdsForCategory(category: string | null | undefined): CategoryThresholds {
-  if (!category) return CATEGORY_THRESHOLDS.default;
-  const normalized = category.toLowerCase().trim();
-  return CATEGORY_THRESHOLDS[normalized] ?? CATEGORY_THRESHOLDS.default;
+  const resolvedKey = resolveCategoryKey(category);
+  return CATEGORY_THRESHOLDS[resolvedKey];
 }
 
 export interface TemporalContext {
