@@ -10,6 +10,7 @@
  */
 
 import { z } from 'zod';
+import { zodToJsonSchema as convertZodToJsonSchema } from 'zod-to-json-schema';
 import { ProductData } from '@/types';
 
 // ============================================================================
@@ -1075,86 +1076,9 @@ export function getToolSchemas(enabledTools?: string[]): Array<{
     function: {
       name: tool.name,
       description: tool.description,
-      parameters: zodToJsonSchema(tool.inputSchema),
+      parameters: convertZodToJsonSchema(tool.inputSchema) as Record<string, unknown>,
     },
   }));
-}
-
-/**
- * Simple Zod to JSON Schema converter for tool parameters
- */
-function zodToJsonSchema(schema: z.ZodSchema): Record<string, unknown> {
-  // This is a simplified converter - in production, use zod-to-json-schema library
-  const jsonSchema: Record<string, unknown> = {
-    type: 'object',
-    properties: {},
-    required: [],
-  };
-
-  if (schema instanceof z.ZodObject) {
-    const shape = schema.shape;
-    for (const [key, value] of Object.entries(shape)) {
-      const fieldSchema = value as z.ZodTypeAny;
-      (jsonSchema.properties as Record<string, unknown>)[key] = zodFieldToJsonSchema(fieldSchema);
-
-      if (!fieldSchema.isOptional()) {
-        (jsonSchema.required as string[]).push(key);
-      }
-    }
-  }
-
-  return jsonSchema;
-}
-
-function zodFieldToJsonSchema(field: z.ZodTypeAny): Record<string, unknown> {
-  const description = field.description;
-
-  if (field instanceof z.ZodString) {
-    return { type: 'string', description };
-  }
-  if (field instanceof z.ZodNumber) {
-    return { type: 'number', description };
-  }
-  if (field instanceof z.ZodBoolean) {
-    return { type: 'boolean', description };
-  }
-  if (field instanceof z.ZodArray) {
-    return {
-      type: 'array',
-      items: zodFieldToJsonSchema(field.element),
-      description
-    };
-  }
-  if (field instanceof z.ZodEnum) {
-    return { type: 'string', enum: field.options, description };
-  }
-  if (field instanceof z.ZodOptional) {
-    return zodFieldToJsonSchema(field.unwrap());
-  }
-  if (field instanceof z.ZodDefault) {
-    const inner = zodFieldToJsonSchema(field._def.innerType);
-    return { ...inner, default: field._def.defaultValue() };
-  }
-  if (field instanceof z.ZodObject) {
-    return zodToJsonSchema(field);
-  }
-  if (field instanceof z.ZodRecord) {
-    return {
-      type: 'object',
-      additionalProperties: zodFieldToJsonSchema(field.valueType),
-      description
-    };
-  }
-  if (field instanceof z.ZodAny) {
-    // ZodAny accepts any value - no type constraint
-    return { description };
-  }
-  if (field instanceof z.ZodUnknown) {
-    // ZodUnknown accepts any value - no type constraint
-    return { description };
-  }
-
-  return { type: 'string', description };
 }
 
 // ============================================================================
