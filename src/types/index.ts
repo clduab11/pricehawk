@@ -116,8 +116,8 @@ export interface DetectResult {
   category_applied: string;           // Which category thresholds were used
   temporal_context: {
     is_maintenance_window: boolean;
-    hour_of_day: number;
-    day_of_week: number;
+    hour_of_day: number | null;
+    day_of_week: number | null;
   };
   thresholds_used: {
     mad_threshold: number;
