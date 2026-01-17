@@ -136,7 +136,7 @@ interface FirecrawlScrapeResult {
 }
 
 async function executeFirecrawlScrape(input: FirecrawlScrapeInput): Promise<ToolResult<FirecrawlScrapeResult>> {
-  return firecrawlRequest<{ success: boolean; data: FirecrawlScrapeResult }>('/scrape', 'POST', {
+  const result = await firecrawlRequest<{ success: boolean; data: FirecrawlScrapeResult }>('/scrape', 'POST', {
     url: input.url,
     formats: input.formats ?? ['markdown'],
     includeTags: input.includeTags,
@@ -149,11 +149,12 @@ async function executeFirecrawlScrape(input: FirecrawlScrapeInput): Promise<Tool
     removeBase64Images: input.removeBase64Images ?? true,
     location: input.location,
     actions: input.actions,
-  }).then(result => ({
+  });
+  return {
     success: result.success,
     data: result.data?.data,
     error: result.error,
-  }));
+  };
 }
 
 // Tool 2: Firecrawl Crawl
@@ -184,7 +185,7 @@ interface FirecrawlCrawlResult {
 }
 
 async function executeFirecrawlCrawl(input: FirecrawlCrawlInput): Promise<ToolResult<FirecrawlCrawlResult>> {
-  return firecrawlRequest<{ success: boolean; id: string }>('/crawl', 'POST', {
+  const result = await firecrawlRequest<{ success: boolean; id: string }>('/crawl', 'POST', {
     url: input.url,
     maxDepth: input.maxDepth,
     limit: input.limit,
@@ -195,11 +196,12 @@ async function executeFirecrawlCrawl(input: FirecrawlCrawlInput): Promise<ToolRe
     ignoreSitemap: input.ignoreSitemap,
     scrapeOptions: input.scrapeOptions,
     webhook: input.webhook,
-  }).then(result => ({
+  });
+  return {
     success: result.success,
     data: result.data ? { id: result.data.id, status: 'started' } : undefined,
     error: result.error,
-  }));
+  };
 }
 
 // Tool 3: Firecrawl Crawl Status
@@ -240,18 +242,19 @@ interface FirecrawlMapResult {
 }
 
 async function executeFirecrawlMap(input: FirecrawlMapInput): Promise<ToolResult<FirecrawlMapResult>> {
-  return firecrawlRequest<{ success: boolean; links: string[] }>('/map', 'POST', {
+  const result = await firecrawlRequest<{ success: boolean; links: string[] }>('/map', 'POST', {
     url: input.url,
     search: input.search,
     ignoreSitemap: input.ignoreSitemap,
     sitemapOnly: input.sitemapOnly,
     includeSubdomains: input.includeSubdomains,
     limit: input.limit,
-  }).then(result => ({
+  });
+  return {
     success: result.success,
     data: result.data ? { links: result.data.links } : undefined,
     error: result.error,
-  }));
+  };
 }
 
 // Tool 5: Firecrawl Extract (LLM extraction)
@@ -271,17 +274,18 @@ interface FirecrawlExtractResult {
 }
 
 async function executeFirecrawlExtract(input: FirecrawlExtractInput): Promise<ToolResult<FirecrawlExtractResult>> {
-  return firecrawlRequest<{ success: boolean; id: string }>('/extract', 'POST', {
+  const result = await firecrawlRequest<{ success: boolean; id: string }>('/extract', 'POST', {
     urls: input.urls,
     prompt: input.prompt,
     schema: input.schema,
     systemPrompt: input.systemPrompt,
     allowExternalLinks: input.allowExternalLinks,
-  }).then(result => ({
+  });
+  return {
     success: result.success,
     data: result.data ? { id: result.data.id, status: 'processing' } : undefined,
     error: result.error,
-  }));
+  };
 }
 
 // Tool 6: Firecrawl Batch Scrape
@@ -300,16 +304,17 @@ interface FirecrawlBatchScrapeResult {
 }
 
 async function executeFirecrawlBatchScrape(input: FirecrawlBatchScrapeInput): Promise<ToolResult<FirecrawlBatchScrapeResult>> {
-  return firecrawlRequest<{ success: boolean; id: string }>('/batch/scrape', 'POST', {
+  const result = await firecrawlRequest<{ success: boolean; id: string }>('/batch/scrape', 'POST', {
     urls: input.urls,
     formats: input.formats,
     onlyMainContent: input.onlyMainContent,
     webhook: input.webhook,
-  }).then(result => ({
+  });
+  return {
     success: result.success,
     data: result.data ? { id: result.data.id, status: 'processing' } : undefined,
     error: result.error,
-  }));
+  };
 }
 
 // ============================================================================
