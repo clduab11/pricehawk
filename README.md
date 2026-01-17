@@ -35,18 +35,18 @@ Pricehawk combines distributed web scraping with Generative AI to filter out "fa
 ```mermaid
 graph LR
     subgraph Detection ["👁️ Detection Layer"]
-        A[Scraper Engine] -->|Raw HTML| B(Price Parser)
-        B -->|Price Update| C{Anomaly?}
+        A[AI Scraping Agent] -->|Tool Calls| B(Firecrawl / Jina / Tavily)
+        B -->|Structured Data| C{Anomaly?}
     end
 
     subgraph Validation ["🧠 AI Validation Layer"]
         C -->|Yes| D[Context Assembler]
-        D -->|History + Competitors| E[DeepSeek V3 Agent]
-        E -->|Confidence Score| F{Is Legitimate?}
+        D -->|History + Competitors| E[15 FREE OpenRouter Models]
+        E -->|Weighted Round-Robin| F{Confidence >80%?}
     end
 
     subgraph Delivery ["🚀 Delivery Layer"]
-        F -->|Yes >80%| G[Notification Router]
+        F -->|Yes| G[Notification Router]
         G -->|Instant| H[Discord / SMS]
         G -->|Digest| I[Email / Twitter]
     end
@@ -67,15 +67,33 @@ Built for speed, reliability, and scale. Pricehawk operates on an event-driven a
 - **⚡ Framework**: [Next.js 14](https://nextjs.org) (App Router)
 - **🗄️ Database**: [PostgreSQL](https://postgresql.org) + [Prisma](https://prisma.io)
 - **📨 Event Bus**: [Redis](https://redis.io) Streams + [BullMQ](https://bullmq.io)
-- **🧠 Intelligence**: [DeepSeek V3](https://deepseek.com) via OpenRouter
-- **🕷️ Scraping**: [Firecrawl](https://firecrawl.dev) + [Playwright](https://playwright.dev)
+- **🧠 AI Engine**: 15 FREE [OpenRouter](https://openrouter.ai) models with weighted round-robin
+- **🕷️ Scraping**: AI Agent with [Firecrawl](https://firecrawl.dev) + [Tavily](https://tavily.com) + [Jina.ai](https://jina.ai)
 - **🐳 DevOps**: Docker & Railway
+
+### AI-Powered Intelligence (New in v0.3)
+
+Pricehawk now uses an **agentic AI system** with tool/function calling for intelligent scraping:
+
+| Model Tier | Models | Capabilities |
+|------------|--------|--------------|
+| **High** | Gemini 2.5 Flash, Gemini 2.0 Flash, Llama 4 Maverick, Qwen 3 235B, DeepSeek V3 | Full tool calling, agentic workflows |
+| **Mid** | Llama 4 Scout, Mistral Small 3.1, Llama 3.3 70B, Nemotron 70B, GLM-4 9B | Reliable tool support |
+| **Base** | Qwen 2.5 72B, Devstral 2512, Phi-4, + paid fallbacks | Fast fallback options |
+
+**Key Features:**
+- **Weighted Round-Robin**: Dynamically selects models based on quality and performance
+- **Tool Calling**: AI orchestrates Firecrawl, Tavily, and Jina.ai automatically
+- **Circuit Breaker**: Auto-disables failing models, recovers after 5 minutes
+- **$0 Cost**: All primary models are FREE via OpenRouter
 
 ### Capabilities
 
-- **Affiliate Monetization**: Automatically injects affiliate tags (Amazon, etc.) into shared links.
-- **Deal Lifecycle**: Auto-expires deals when prices return to normal.
-- **Multi-Channel**: Delivers to Discord, Telegram, Twitter/X, and SMS simultaneously.
+- **AI Scraping Agent**: Intelligent tool selection for optimal data extraction
+- **Category-Specific Thresholds**: Temporal weighting for anomaly detection
+- **Affiliate Monetization**: Automatically injects affiliate tags (Amazon, etc.) into shared links
+- **Deal Lifecycle**: Auto-expires deals when prices return to normal
+- **Multi-Channel**: Delivers to Discord, Telegram, Twitter/X, and SMS simultaneously
 
 ---
 
@@ -122,11 +140,32 @@ pie title Revenue Streams
 
 ---
 
+## 📋 Recent Updates (January 2026)
+
+### v0.3.0 - AI-Powered Scraping Engine
+- **15 FREE OpenRouter Models**: Weighted round-robin selection across Gemini, Llama, DeepSeek, Mistral, Qwen
+- **Tool Calling Support**: AI agent orchestrates Firecrawl, Tavily, and Jina.ai
+- **Circuit Breaker Pattern**: Automatic failover with 5-minute recovery
+- **Performance Tracking**: Dynamic weight adjustment based on success rates
+
+### v0.2.5 - PRD Development Analysis
+- Comprehensive repository analysis for production readiness
+- Identified 8 key development areas with priorities (P0-P3)
+- Technical debt assessment and remediation strategies
+
+### v0.2.4 - Category Thresholds & Temporal Weighting
+- Category-specific anomaly detection thresholds
+- Temporal weighting for time-of-day analysis
+- Improved false positive filtering
+
+---
+
 ## 🗺️ Roadmap
 
 - [x] **Phase 1: Foundation** - Scrapers, DB, Basic Auth
 - [x] **Phase 2: Intelligence** - AI Validation, Redis Pipeline
 - [x] **Phase 3: Expansion** - Twitter, Telegram, & Affiliate Integration
+- [x] **Phase 3.5: AI Engine** - Weighted Round-Robin, Tool Calling, Agentic Scraping
 - [ ] **Phase 4: Mobile** - React Native App & Push Notifications
 - [ ] **Phase 5: Global** - International Retailer Support
 

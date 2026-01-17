@@ -241,11 +241,15 @@ export class WeightedModelSelector {
         effectiveWeight,
         successCount: perf?.successCount || 0,
         failureCount: perf?.failureCount || 0,
+        toolCallSuccessCount: perf?.toolCallSuccessCount || 0,
+        toolCallFailureCount: perf?.toolCallFailureCount || 0,
         avgLatencyMs: perf && perf.successCount > 0
           ? Math.round(perf.totalLatencyMs / perf.successCount)
           : 0,
         circuitState: circuitState?.state || 'closed',
         lastUsed: perf?.lastUsed || null,
+        supportsTools: model.supportsTools,
+        isFree: model.isFree,
       });
 
       if (perf) {
@@ -288,6 +292,30 @@ export class WeightedModelSelector {
 
   // === Private methods ===
 
+  /**
+   * Record a successful tool call for a model
+   */
+  async recordToolCallSuccess(modelId: string): Promise<void> {
+    const perf = this.getOrCreatePerformance(modelId);
+    perf.toolCallSuccessCount++;
+
+    if (this.redis) {
+      await this.savePerformanceToRedis(modelId, perf);
+    }
+  }
+
+  /**
+   * Record a failed tool call for a model
+   */
+  async recordToolCallFailure(modelId: string): Promise<void> {
+    const perf = this.getOrCreatePerformance(modelId);
+    perf.toolCallFailureCount++;
+
+    if (this.redis) {
+      await this.savePerformanceToRedis(modelId, perf);
+    }
+  }
+
   private getOrCreatePerformance(modelId: string): ModelPerformance {
     let perf = this.state.performances.get(modelId);
     if (!perf) {
@@ -298,6 +326,8 @@ export class WeightedModelSelector {
         totalLatencyMs: 0,
         lastUsed: new Date(),
         consecutiveFailures: 0,
+        toolCallSuccessCount: 0,
+        toolCallFailureCount: 0,
       };
       this.state.performances.set(modelId, perf);
     }
@@ -451,9 +481,13 @@ interface ModelStats {
   effectiveWeight: number;
   successCount: number;
   failureCount: number;
+  toolCallSuccessCount: number;
+  toolCallFailureCount: number;
   avgLatencyMs: number;
   circuitState: 'closed' | 'open' | 'half-open';
   lastUsed: Date | null;
+  supportsTools: boolean;
+  isFree: boolean;
 }
 
 interface ModelSelectorStats {

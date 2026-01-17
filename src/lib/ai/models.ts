@@ -1,21 +1,26 @@
 /**
- * OpenRouter FREE Model Configuration
+ * OpenRouter Model Configuration
  *
- * Weighted-decision-round-robin model selection for AI validation.
- * Top 15 FREE models on OpenRouter as of January 2026.
- * All models have $0 pricing - weighted by quality and reliability.
+ * Weighted-decision-round-robin model selection for AI validation and scraping.
+ * Top 15 FREE models on OpenRouter as of January 2026 with tool-calling support.
+ * Includes low-cost fallback models for tool-intensive operations.
  *
  * @see https://openrouter.ai/collections/free-models
+ * @see https://openrouter.ai/docs/guides/features/tool-calling
  */
 
 export interface ModelConfig {
-  id: string;                    // OpenRouter model ID (with :free suffix)
+  id: string;                    // OpenRouter model ID
   name: string;                  // Human-readable name
   provider: string;              // Provider name
   weight: number;                // Selection weight (1-100, higher = more likely)
   contextWindow: number;         // Max context tokens
   tier: 'high' | 'mid' | 'base'; // Quality tier
   capabilities: ModelCapability[];
+  supportsTools: boolean;        // Whether model supports function/tool calling
+  isFree: boolean;               // Whether model is free ($0 cost)
+  costPer1kInput?: number;       // Cost per 1k input tokens (if not free)
+  costPer1kOutput?: number;      // Cost per 1k output tokens (if not free)
   enabled: boolean;              // Whether this model is active
   maxRetries: number;            // Max retries before fallback
   timeoutMs: number;             // Request timeout in milliseconds
@@ -27,115 +32,105 @@ export type ModelCapability =
   | 'json'           // Reliable JSON output
   | 'fast'           // Low latency
   | 'vision'         // Image understanding
-  | 'code';          // Code generation
+  | 'code'           // Code generation
+  | 'tools'          // Tool/function calling
+  | 'agentic';       // Agentic workflows
 
 /**
  * Top 15 FREE OpenRouter Models - January 2026
  *
- * Weights are calibrated for pricing anomaly validation:
- * - Higher weight for models with strong reasoning + JSON output
- * - All models are FREE ($0 cost)
- * - Adjusted for reliability based on provider track record
+ * Weights are calibrated for pricing anomaly validation and scraping:
+ * - Higher weight for models with strong reasoning + tool support
+ * - All primary models are FREE ($0 cost)
+ * - Includes low-cost fallbacks for tool-intensive operations
  *
  * Note: Free models may have rate limits during peak times.
  * The :free suffix indicates the free variant of the model.
  */
 export const OPENROUTER_MODELS: ModelConfig[] = [
-  // === HIGH TIER (Best quality free models) ===
+  // === HIGH TIER (Best quality free models with tool support) ===
   {
     id: 'google/gemini-2.5-flash-preview:free',
     name: 'Gemini 2.5 Flash',
     provider: 'Google',
-    weight: 25,  // Highest weight - excellent quality, 1M context
+    weight: 28,  // Highest weight - excellent quality, tool support, 1M context
     contextWindow: 1048576,
     tier: 'high',
-    capabilities: ['reasoning', 'analysis', 'json', 'fast', 'vision'],
-    enabled: true,
-    maxRetries: 3,
-    timeoutMs: 20000,
-  },
-  {
-    id: 'google/gemini-2.0-flash-lite-001:free',
-    name: 'Gemini 2.0 Flash Lite',
-    provider: 'Google',
-    weight: 22,  // Fast and reliable
-    contextWindow: 1048576,
-    tier: 'high',
-    capabilities: ['reasoning', 'analysis', 'json', 'fast'],
-    enabled: true,
-    maxRetries: 3,
-    timeoutMs: 15000,
-  },
-  {
-    id: 'deepseek/deepseek-v3-base:free',
-    name: 'DeepSeek V3 Base',
-    provider: 'DeepSeek',
-    weight: 24,  // Excellent reasoning, very capable
-    contextWindow: 163840,
-    tier: 'high',
-    capabilities: ['reasoning', 'analysis', 'json', 'code'],
+    capabilities: ['reasoning', 'analysis', 'json', 'fast', 'vision', 'tools', 'agentic'],
+    supportsTools: true,
+    isFree: true,
     enabled: true,
     maxRetries: 3,
     timeoutMs: 25000,
   },
   {
-    id: 'deepseek/deepseek-r1-zero:free',
-    name: 'DeepSeek R1 Zero',
-    provider: 'DeepSeek',
-    weight: 20,  // Strong reasoning model
-    contextWindow: 163840,
+    id: 'google/gemini-2.0-flash-001:free',
+    name: 'Gemini 2.0 Flash',
+    provider: 'Google',
+    weight: 26,  // Strong tool support, fast
+    contextWindow: 1048576,
     tier: 'high',
-    capabilities: ['reasoning', 'analysis', 'json'],
+    capabilities: ['reasoning', 'analysis', 'json', 'fast', 'vision', 'tools'],
+    supportsTools: true,
+    isFree: true,
     enabled: true,
     maxRetries: 3,
-    timeoutMs: 30000,
+    timeoutMs: 20000,
   },
   {
     id: 'meta-llama/llama-4-maverick:free',
     name: 'Llama 4 Maverick',
     provider: 'Meta',
-    weight: 22,  // Latest Llama 4, very capable
+    weight: 24,  // Latest Llama 4, native tool support
     contextWindow: 131072,
     tier: 'high',
-    capabilities: ['reasoning', 'analysis', 'json', 'code'],
+    capabilities: ['reasoning', 'analysis', 'json', 'code', 'tools', 'agentic'],
+    supportsTools: true,
+    isFree: true,
     enabled: true,
     maxRetries: 3,
     timeoutMs: 25000,
   },
-
-  // === MID TIER (Good balance of quality and speed) ===
   {
-    id: 'meta-llama/llama-4-scout:free',
-    name: 'Llama 4 Scout',
-    provider: 'Meta',
-    weight: 18,  // Efficient Llama 4 variant
+    id: 'qwen/qwen3-235b-a22b:free',
+    name: 'Qwen 3 235B',
+    provider: 'Alibaba',
+    weight: 22,  // Excellent for agentic tasks
     contextWindow: 131072,
-    tier: 'mid',
-    capabilities: ['reasoning', 'analysis', 'json', 'fast'],
+    tier: 'high',
+    capabilities: ['reasoning', 'analysis', 'json', 'code', 'tools', 'agentic'],
+    supportsTools: true,
+    isFree: true,
     enabled: true,
     maxRetries: 3,
-    timeoutMs: 20000,
-  },
-  {
-    id: 'meta-llama/llama-3.3-70b-instruct:free',
-    name: 'Llama 3.3 70B Instruct',
-    provider: 'Meta',
-    weight: 20,  // Proven model, GPT-4 level performance
-    contextWindow: 131072,
-    tier: 'mid',
-    capabilities: ['reasoning', 'analysis', 'json', 'code'],
-    enabled: true,
-    maxRetries: 3,
-    timeoutMs: 25000,
+    timeoutMs: 30000,
   },
   {
     id: 'deepseek/deepseek-chat-v3-0324:free',
     name: 'DeepSeek Chat V3',
     provider: 'DeepSeek',
-    weight: 18,  // Good chat model
+    weight: 22,  // Strong reasoning, good tool support
     contextWindow: 163840,
+    tier: 'high',
+    capabilities: ['reasoning', 'analysis', 'json', 'code', 'tools'],
+    supportsTools: true,
+    isFree: true,
+    enabled: true,
+    maxRetries: 3,
+    timeoutMs: 25000,
+  },
+
+  // === MID TIER (Good balance of quality and speed with tool support) ===
+  {
+    id: 'meta-llama/llama-4-scout:free',
+    name: 'Llama 4 Scout',
+    provider: 'Meta',
+    weight: 20,  // Efficient Llama 4 variant with tools
+    contextWindow: 131072,
     tier: 'mid',
-    capabilities: ['reasoning', 'analysis', 'json'],
+    capabilities: ['reasoning', 'analysis', 'json', 'fast', 'tools'],
+    supportsTools: true,
+    isFree: true,
     enabled: true,
     maxRetries: 3,
     timeoutMs: 20000,
@@ -144,48 +139,26 @@ export const OPENROUTER_MODELS: ModelConfig[] = [
     id: 'mistralai/mistral-small-3.1-24b-instruct:free',
     name: 'Mistral Small 3.1 24B',
     provider: 'Mistral',
-    weight: 16,  // Reliable Mistral model
+    weight: 18,  // Reliable Mistral with function calling
     contextWindow: 131072,
     tier: 'mid',
-    capabilities: ['reasoning', 'analysis', 'json', 'fast'],
+    capabilities: ['reasoning', 'analysis', 'json', 'fast', 'tools'],
+    supportsTools: true,
+    isFree: true,
     enabled: true,
     maxRetries: 3,
     timeoutMs: 18000,
   },
   {
-    id: 'xiaomi/mimo-v2-flash:free',
-    name: 'MiMo V2 Flash',
-    provider: 'Xiaomi',
-    weight: 15,  // MoE model, 309B total params
-    contextWindow: 262144,
+    id: 'meta-llama/llama-3.3-70b-instruct:free',
+    name: 'Llama 3.3 70B Instruct',
+    provider: 'Meta',
+    weight: 18,  // Proven model with tool support
+    contextWindow: 131072,
     tier: 'mid',
-    capabilities: ['reasoning', 'analysis', 'json', 'code'],
-    enabled: true,
-    maxRetries: 3,
-    timeoutMs: 20000,
-  },
-
-  // === BASE TIER (Lighter models, faster response) ===
-  {
-    id: 'mistralai/devstral-2512:free',
-    name: 'Devstral 2512',
-    provider: 'Mistral',
-    weight: 14,  // Programming-focused
-    contextWindow: 131072,
-    tier: 'base',
-    capabilities: ['analysis', 'json', 'code', 'fast'],
-    enabled: true,
-    maxRetries: 3,
-    timeoutMs: 15000,
-  },
-  {
-    id: 'qwen/qwen2.5-vl-72b-instruct:free',
-    name: 'Qwen 2.5 VL 72B',
-    provider: 'Alibaba',
-    weight: 16,  // Strong multilingual + vision
-    contextWindow: 131072,
-    tier: 'base',
-    capabilities: ['reasoning', 'analysis', 'json', 'vision'],
+    capabilities: ['reasoning', 'analysis', 'json', 'code', 'tools'],
+    supportsTools: true,
+    isFree: true,
     enabled: true,
     maxRetries: 3,
     timeoutMs: 25000,
@@ -194,34 +167,104 @@ export const OPENROUTER_MODELS: ModelConfig[] = [
     id: 'nvidia/llama-3.1-nemotron-70b-instruct:free',
     name: 'Nemotron 70B',
     provider: 'NVIDIA',
-    weight: 14,  // NVIDIA-tuned Llama
+    weight: 16,  // NVIDIA-tuned Llama with tool support
     contextWindow: 131072,
-    tier: 'base',
-    capabilities: ['reasoning', 'analysis', 'json'],
+    tier: 'mid',
+    capabilities: ['reasoning', 'analysis', 'json', 'tools'],
+    supportsTools: true,
+    isFree: true,
     enabled: true,
     maxRetries: 3,
     timeoutMs: 25000,
   },
   {
-    id: 'nousresearch/deephermes-3-llama-3-8b-preview:free',
-    name: 'DeepHermes 3 8B',
-    provider: 'Nous Research',
-    weight: 10,  // Lighter but capable
+    id: 'thudm/glm-4-9b-chat:free',
+    name: 'GLM-4 9B Chat',
+    provider: 'Zhipu',
+    weight: 14,  // Good for agentic applications
+    contextWindow: 131072,
+    tier: 'mid',
+    capabilities: ['reasoning', 'analysis', 'json', 'fast', 'tools', 'agentic'],
+    supportsTools: true,
+    isFree: true,
+    enabled: true,
+    maxRetries: 3,
+    timeoutMs: 18000,
+  },
+
+  // === BASE TIER (Reliable fallbacks with tool support) ===
+  {
+    id: 'qwen/qwen2.5-72b-instruct:free',
+    name: 'Qwen 2.5 72B',
+    provider: 'Alibaba',
+    weight: 16,  // Strong multilingual + tools
     contextWindow: 131072,
     tier: 'base',
-    capabilities: ['reasoning', 'analysis', 'json', 'fast'],
+    capabilities: ['reasoning', 'analysis', 'json', 'tools'],
+    supportsTools: true,
+    isFree: true,
+    enabled: true,
+    maxRetries: 3,
+    timeoutMs: 25000,
+  },
+  {
+    id: 'mistralai/devstral-2512:free',
+    name: 'Devstral 2512',
+    provider: 'Mistral',
+    weight: 14,  // Programming-focused with tool support
+    contextWindow: 131072,
+    tier: 'base',
+    capabilities: ['analysis', 'json', 'code', 'fast', 'tools'],
+    supportsTools: true,
+    isFree: true,
     enabled: true,
     maxRetries: 3,
     timeoutMs: 15000,
   },
   {
-    id: 'allenai/olmo-2-0325-32b-instruct:free',
-    name: 'OLMo 2 32B',
-    provider: 'AllenAI',
-    weight: 12,  // Open research model
-    contextWindow: 131072,
+    id: 'microsoft/phi-4:free',
+    name: 'Phi-4',
+    provider: 'Microsoft',
+    weight: 12,  // Efficient small model with tools
+    contextWindow: 16384,
     tier: 'base',
-    capabilities: ['reasoning', 'analysis', 'json'],
+    capabilities: ['reasoning', 'analysis', 'json', 'fast', 'tools'],
+    supportsTools: true,
+    isFree: true,
+    enabled: true,
+    maxRetries: 3,
+    timeoutMs: 15000,
+  },
+
+  // === LOW-COST FALLBACKS (For tool-intensive operations when free models fail) ===
+  {
+    id: 'google/gemini-2.0-flash-001',
+    name: 'Gemini 2.0 Flash (Paid)',
+    provider: 'Google',
+    weight: 20,  // Paid fallback with reliable tool support
+    contextWindow: 1048576,
+    tier: 'high',
+    capabilities: ['reasoning', 'analysis', 'json', 'fast', 'vision', 'tools', 'agentic'],
+    supportsTools: true,
+    isFree: false,
+    costPer1kInput: 0.00001,
+    costPer1kOutput: 0.00004,
+    enabled: true,
+    maxRetries: 3,
+    timeoutMs: 20000,
+  },
+  {
+    id: 'anthropic/claude-3.5-haiku',
+    name: 'Claude 3.5 Haiku',
+    provider: 'Anthropic',
+    weight: 18,  // Very reliable tool support, low cost
+    contextWindow: 200000,
+    tier: 'high',
+    capabilities: ['reasoning', 'analysis', 'json', 'fast', 'tools', 'agentic'],
+    supportsTools: true,
+    isFree: false,
+    costPer1kInput: 0.0008,
+    costPer1kOutput: 0.004,
     enabled: true,
     maxRetries: 3,
     timeoutMs: 20000,
@@ -238,6 +281,8 @@ export interface ModelPerformance {
   totalLatencyMs: number;
   lastUsed: Date;
   consecutiveFailures: number;
+  toolCallSuccessCount: number;
+  toolCallFailureCount: number;
 }
 
 /**
@@ -255,6 +300,42 @@ export interface ModelSelectionState {
 export function getEnabledModels(): ModelConfig[] {
   return OPENROUTER_MODELS
     .filter(m => m.enabled)
+    .sort((a, b) => b.weight - a.weight);
+}
+
+/**
+ * Get enabled FREE models only
+ */
+export function getFreeModels(): ModelConfig[] {
+  return OPENROUTER_MODELS
+    .filter(m => m.enabled && m.isFree)
+    .sort((a, b) => b.weight - a.weight);
+}
+
+/**
+ * Get models that support tool/function calling
+ */
+export function getToolCapableModels(): ModelConfig[] {
+  return OPENROUTER_MODELS
+    .filter(m => m.enabled && m.supportsTools)
+    .sort((a, b) => b.weight - a.weight);
+}
+
+/**
+ * Get FREE models that support tool calling
+ */
+export function getFreeToolCapableModels(): ModelConfig[] {
+  return OPENROUTER_MODELS
+    .filter(m => m.enabled && m.isFree && m.supportsTools)
+    .sort((a, b) => b.weight - a.weight);
+}
+
+/**
+ * Get paid fallback models for tool calling
+ */
+export function getPaidToolFallbacks(): ModelConfig[] {
+  return OPENROUTER_MODELS
+    .filter(m => m.enabled && !m.isFree && m.supportsTools)
     .sort((a, b) => b.weight - a.weight);
 }
 
@@ -288,10 +369,16 @@ export function calculateEffectiveWeight(
   // Penalize models with consecutive failures (reduce weight by 10 per failure)
   const consecutiveFailurePenalty = Math.min(performance.consecutiveFailures * 10, 80);
 
+  // Bonus for good tool call success rate
+  const toolCallTotal = performance.toolCallSuccessCount + performance.toolCallFailureCount;
+  const toolCallBonus = toolCallTotal > 0
+    ? Math.round((performance.toolCallSuccessCount / toolCallTotal) * 5)
+    : 0;
+
   // Calculate effective weight (minimum 1)
   const effectiveWeight = Math.max(
     1,
-    Math.round(model.weight * successRate) - consecutiveFailurePenalty
+    Math.round(model.weight * successRate) - consecutiveFailurePenalty + toolCallBonus
   );
 
   return effectiveWeight;
@@ -335,8 +422,25 @@ export function createDefaultSelectionState(): ModelSelectionState {
 }
 
 /**
- * Get a summary of model costs (all FREE)
+ * Get a summary of model costs
  */
 export function getModelCostSummary(): string {
-  return 'All 15 models are FREE ($0 cost) - using OpenRouter free tier';
+  const freeCount = getFreeModels().length;
+  const paidCount = OPENROUTER_MODELS.filter(m => m.enabled && !m.isFree).length;
+  return `${freeCount} FREE models + ${paidCount} low-cost fallbacks for tool-intensive operations`;
+}
+
+/**
+ * Get models optimized for scraping with tool use
+ */
+export function getScrapingModels(): ModelConfig[] {
+  return OPENROUTER_MODELS.filter(
+    m => m.enabled &&
+         m.supportsTools &&
+         (m.capabilities.includes('agentic') || m.capabilities.includes('tools'))
+  ).sort((a, b) => {
+    // Prefer free models, then by weight
+    if (a.isFree !== b.isFree) return a.isFree ? -1 : 1;
+    return b.weight - a.weight;
+  });
 }
