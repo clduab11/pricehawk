@@ -1134,9 +1134,11 @@ function zodFieldToJsonSchema(field: z.ZodTypeAny): Record<string, unknown> {
     };
   }
   if (field instanceof z.ZodAny) {
+    // ZodAny accepts any value - no type constraint
     return { description };
   }
   if (field instanceof z.ZodUnknown) {
+    // ZodUnknown accepts any value - no type constraint
     return { description };
   }
 
@@ -1457,11 +1459,9 @@ export class ScrapingAgent {
     }
 
     // Validate that all requested tools are enabled
-    if (this.config.enabledTools !== undefined) {
-      for (const call of toolCalls) {
-        if (!this.config.enabledTools.includes(call.name)) {
-          throw new ToolNotEnabledError(call.name, this.state.iteration);
-        }
+    for (const call of toolCalls) {
+      if (!this.config.enabledTools.includes(call.name)) {
+        throw new ToolNotEnabledError(call.name, this.state.iteration);
       }
     }
 
