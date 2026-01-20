@@ -1,0 +1,14 @@
+# Railway Deployment Configuration
+# https://docs.railway.app/reference/config-as-code
+
+[build]
+builder = "nixpacks"
+buildCommand = "npm ci --legacy-peer-deps && npx prisma generate"
+
+[deploy]
+# Start command for the main app
+startCommand = "npm start"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
