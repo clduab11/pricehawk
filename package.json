@@ -42,7 +42,7 @@
     "tsx": "^4.0.0",
     "twilio": "^5.11.2",
     "twitter-api-v2": "^1.29.0",
-    "zod": "^3.23.8"
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.1",
