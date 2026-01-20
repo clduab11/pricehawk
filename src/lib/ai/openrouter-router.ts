@@ -169,8 +169,8 @@ export const SOTA_MODELS: ModelConfig[] = [
     costPer1kTokens: 0.003,
   },
   {
-    id: 'openai/gpt-4.5-turbo',
-    name: 'GPT-4.5 Turbo',
+    id: 'openai/gpt-4-turbo',
+    name: 'GPT-4 Turbo',
     weight: 30,
     tier: 'sota',
     contextWindow: 128000,
@@ -555,7 +555,7 @@ export function getRouterStats(): RouterStats {
   }
 
   const errorRates: Record<string, number> = {};
-  for (const [modelId, timestamps] of Array.from(state.errorTimestamps.entries())) {
+  for (const modelId of state.errorTimestamps.keys()) {
     const calls = state.callCounts.get(modelId) || 0;
     const recentErrors = getRecentErrorCount(modelId);
     errorRates[modelId] = calls > 0 ? recentErrors / calls : 0;
