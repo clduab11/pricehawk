@@ -98,8 +98,24 @@ export async function validateAnomaly(anomaly: PricingAnomaly): Promise<Validati
       return fallbackValidation(anomaly);
     }
 
-    // Parse AI response
-    const parsed = JSON.parse(content);
+    // Parse AI response with explicit error handling
+    let parsed: {
+      is_glitch?: boolean;
+      confidence?: number;
+      reasoning?: string;
+      glitch_type?: ValidationResult['glitch_type'];
+    };
+    try {
+      parsed = JSON.parse(content);
+    } catch (parseError) {
+      console.error('[Validator] Failed to parse AI response as JSON:', {
+        error: parseError,
+        contentPreview: content?.slice(0, 200),
+        model: MODEL,
+      });
+      return fallbackValidation(anomaly);
+    }
+
     return {
       is_glitch: parsed.is_glitch ?? false,
       confidence: Math.min(Math.max(parsed.confidence ?? 0, 0), 100),
@@ -116,8 +132,11 @@ export async function validateAnomaly(anomaly: PricingAnomaly): Promise<Validati
  * Format anomaly data for AI analysis
  */
 function formatAnomalyForAI(anomaly: PricingAnomaly): string {
-  // Use non-null assertion or optional chaining for optional product properties
-  const product = anomaly.product!;
+  // Early return with fallback if product is missing
+  if (!anomaly.product) {
+    throw new Error('Cannot format anomaly for AI: product data is missing');
+  }
+  const product = anomaly.product;
   const { anomalyType, zScore, discountPercentage, initialConfidence } = anomaly;
   
   return `Analyze this potential pricing error:
@@ -243,13 +262,19 @@ export async function validateAndProcess(anomaly: PricingAnomaly): Promise<Valid
     return null;
   }
 
+  // Ensure product exists before constructing ValidatedGlitch
+  if (!anomaly.product) {
+    console.error('[Validator] Validation succeeded but product is missing');
+    return null;
+  }
+
   // Create validated glitch record
   const glitchId = `glitch_${crypto.randomUUID()}`;
   const validatedGlitch: ValidatedGlitch = {
     id: glitchId,
     anomalyId: anomaly.id,
     productId: anomaly.productId,
-    product: anomaly.product!,
+    product: anomaly.product,
     isGlitch: validation.is_glitch,
     confidence: validation.confidence,
     reasoning: validation.reasoning,
