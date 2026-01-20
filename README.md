@@ -65,6 +65,7 @@ Pricehawk employs **5 statistical methods** to identify pricing errors with high
 3. **Double MAD (Median Absolute Deviation)** - Asymmetric outlier detection for right-skewed retail pricing
 4. **Adjusted IQR with Medcouple** - Boxplot-based outlier detection with skewness correction
 5. **Category-Specific Thresholds** - Dynamic sensitivity tuning per product category:
+
    - 🥫 Grocery: 30% drop threshold (most sensitive)
    - 💻 Electronics/Computers: 40% threshold
    - 👕 Fashion: 60% threshold (least sensitive)
