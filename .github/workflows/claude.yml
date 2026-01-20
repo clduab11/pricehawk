@@ -31,8 +31,7 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           assignee_trigger: clduab11
-          timeout_minutes: "60"
-          custom_instructions: |
+          prompt: |
             This is the PriceHawk repository - a Next.js 14 + TypeScript price monitoring application.
             
             ## Project Structure
