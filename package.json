@@ -11,9 +11,16 @@
     "worker": "tsx src/worker.ts",
     "worker:validate": "tsx src/workers/anomaly-validator.ts",
     "worker:notify": "tsx src/workers/notification-sender.ts",
+    "worker:verifier": "tsx src/workers/deal-verifier.ts",
+    "worker:social": "tsx src/workers/social-poster.ts",
+    "worker:newsletter": "tsx src/workers/newsletter-digest.ts",
+    "worker:telegram": "tsx src/workers/telegram-bot.ts",
     "db:seed": "tsx prisma/seed.ts",
     "prisma:generate": "prisma generate --no-hints",
-    "test": "vitest"
+    "validate:env": "tsx scripts/validate-env.ts",
+    "preflight": "npm run validate:env && npm run prisma:generate",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.36.8",
