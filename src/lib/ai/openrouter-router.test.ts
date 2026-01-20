@@ -4,6 +4,7 @@ import {
   isCircuitBroken,
   resetCircuitBreaker,
   clearAllCircuitBreakers,
+  cleanupExpiredErrors,
   isSotaEnabled,
   isUnicornOpportunity,
   weightedRandomSelection,
@@ -56,6 +57,7 @@ describe('OpenRouter Router', () => {
   afterEach(() => {
     Math.random = originalRandom;
     Date.now = originalDateNow;
+    resetRouterState();
     delete process.env.ENABLE_SOTA_MODELS;
   });
 
@@ -231,7 +233,6 @@ describe('OpenRouter Router', () => {
     const baseContext: UnicornContext = {
       discount: 50,
       confidence: 50,
-      currentPrice: 10,
       normalPrice: 100,
       zScore: 2,
       product: {
@@ -389,7 +390,6 @@ describe('OpenRouter Router', () => {
       const unicornContext: UnicornContext = {
         discount: 90,
         confidence: 95,
-        currentPrice: 5,
         normalPrice: 100,
         zScore: 5,
         product: {
@@ -409,7 +409,6 @@ describe('OpenRouter Router', () => {
       const unicornContext: UnicornContext = {
         discount: 90,
         confidence: 95,
-        currentPrice: 5,
         normalPrice: 100,
         zScore: 5,
         product: {

@@ -110,7 +110,7 @@ export async function validateAnomaly(anomaly: PricingAnomaly): Promise<Validati
     } catch (parseError) {
       console.error('[Validator] Failed to parse AI response as JSON:', {
         error: parseError,
-        contentPreview: content?.slice(0, 200),
+        contentPreview: content.slice(0, 200),
         model: MODEL,
       });
       return fallbackValidation(anomaly);
