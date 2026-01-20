@@ -12,6 +12,20 @@
 // Types
 // =============================================================================
 
+/**
+ * Custom error class for OpenRouter API errors.
+ * Used to track whether an error has already been reported to the circuit breaker.
+ */
+export class OpenRouterError extends Error {
+  public readonly alreadyReported: boolean;
+
+  constructor(message: string, alreadyReported = false) {
+    super(message);
+    this.name = 'OpenRouterError';
+    this.alreadyReported = alreadyReported;
+  }
+}
+
 export interface ModelConfig {
   id: string;
   name: string;
@@ -23,7 +37,6 @@ export interface ModelConfig {
 export interface UnicornContext {
   discount: number;
   confidence: number;
-  currentPrice: number;
   normalPrice: number;
   zScore?: number;
   product: {
@@ -161,11 +174,37 @@ export function reportModelError(modelId: string): void {
   console.log(
     `[OpenRouter] Model ${modelId} error reported. Recent errors: ${state.errorCounts.get(modelId)?.timestamps.length || 0}`
   );
+
+  // Cleanup expired errors as part of error reporting
+  cleanupExpiredErrors(modelId);
+}
+
+/**
+ * Clean up expired error timestamps from the circuit breaker state.
+ * This is a maintenance function separated from the read operation.
+ */
+export function cleanupExpiredErrors(modelId: string): void {
+  const now = Date.now();
+  const existing = state.errorCounts.get(modelId);
+
+  if (!existing) return;
+
+  // Filter to keep only recent errors within the sliding window
+  const recentErrors = existing.timestamps.filter(
+    (ts) => now - ts < CIRCUIT_BREAKER_WINDOW_MS
+  );
+
+  if (recentErrors.length === 0) {
+    state.errorCounts.delete(modelId);
+  } else {
+    state.errorCounts.set(modelId, { timestamps: recentErrors });
+  }
 }
 
 /**
  * Check if a model's circuit breaker is tripped.
  * Returns true if the model has >= CIRCUIT_BREAKER_THRESHOLD errors in the sliding window.
+ * This is now a pure read operation that doesn't modify state.
  */
 export function isCircuitBroken(modelId: string): boolean {
   const now = Date.now();
@@ -178,13 +217,6 @@ export function isCircuitBroken(modelId: string): boolean {
     (ts) => now - ts < CIRCUIT_BREAKER_WINDOW_MS
   );
 
-  // Update state to clean up old timestamps
-  if (recentErrors.length === 0) {
-    state.errorCounts.delete(modelId);
-    return false;
-  }
-
-  state.errorCounts.set(modelId, { timestamps: recentErrors });
   return recentErrors.length >= CIRCUIT_BREAKER_THRESHOLD;
 }
 
@@ -280,16 +312,18 @@ export function weightedRandomSelection(models: ModelConfig[]): ModelConfig {
 // =============================================================================
 
 /**
- * Select a standard (free-tier) model, filtering out circuit-broken models.
+ * Select a standard (free-tier) model, filtering out circuit-broken and excluded models.
  */
-export function selectStandardModel(): ModelConfig {
-  // Filter out circuit-broken models before selection
-  const healthyModels = FREE_MODELS.filter((m) => !isCircuitBroken(m.id));
+export function selectStandardModel(excludeModels: string[] = []): ModelConfig {
+  // Filter out circuit-broken models and excluded models before selection
+  const healthyModels = FREE_MODELS.filter(
+    (m) => !isCircuitBroken(m.id) && !excludeModels.includes(m.id)
+  );
 
   if (healthyModels.length === 0) {
-    // All models broken - log warning and reset circuit breakers
+    // All models broken or excluded - log warning and reset circuit breakers
     console.warn(
-      '[OpenRouter] All standard models circuit-broken, resetting...'
+      '[OpenRouter] All standard models circuit-broken or excluded, resetting...'
     );
     clearAllCircuitBreakers();
     return FREE_MODELS[0];
@@ -303,25 +337,27 @@ export function selectStandardModel(): ModelConfig {
 }
 
 /**
- * Select a SOTA (premium) model, filtering out circuit-broken models.
- * Falls back to standard tier if all SOTA models are broken.
+ * Select a SOTA (premium) model, filtering out circuit-broken and excluded models.
+ * Falls back to standard tier if all SOTA models are broken or excluded.
  */
-export function selectSotaModel(): ModelConfig {
+export function selectSotaModel(excludeModels: string[] = []): ModelConfig {
   // Additional safety check
   if (!isSotaEnabled()) {
     console.warn(
       '[OpenRouter] SOTA disabled but selectSotaModel called, falling back to standard'
     );
-    return selectStandardModel();
+    return selectStandardModel(excludeModels);
   }
 
-  const healthyModels = SOTA_MODELS.filter((m) => !isCircuitBroken(m.id));
+  const healthyModels = SOTA_MODELS.filter(
+    (m) => !isCircuitBroken(m.id) && !excludeModels.includes(m.id)
+  );
 
   if (healthyModels.length === 0) {
     console.warn(
-      '[OpenRouter] All SOTA models circuit-broken, falling back to standard tier'
+      '[OpenRouter] All SOTA models circuit-broken or excluded, falling back to standard tier'
     );
-    return selectStandardModel();
+    return selectStandardModel(excludeModels);
   }
 
   const selected = weightedRandomSelection(healthyModels);
@@ -335,14 +371,14 @@ export function selectSotaModel(): ModelConfig {
  * Main entry point for model selection.
  * Automatically routes to SOTA models for unicorn opportunities (if enabled).
  */
-export function selectModel(context?: UnicornContext): ModelConfig {
+export function selectModel(context?: UnicornContext, excludeModels: string[] = []): ModelConfig {
   // Gate SOTA selection at the earliest point
   if (context && isSotaEnabled() && isUnicornOpportunity(context)) {
     console.log('[OpenRouter] 🦄 Unicorn detected! Routing to SOTA model');
-    return selectSotaModel();
+    return selectSotaModel(excludeModels);
   }
 
-  return selectStandardModel();
+  return selectStandardModel(excludeModels);
 }
 
 // =============================================================================
@@ -434,7 +470,7 @@ export async function callOpenRouter(
       const errorText = await response.text();
       console.error(`[OpenRouter] API Error (${model.id}): ${response.status} - ${errorText}`);
       reportModelError(model.id);
-      throw new Error(`OpenRouter API error: ${response.status}`);
+      throw new OpenRouterError(`OpenRouter API error: ${response.status}`, true);
     }
 
     const data = await response.json();
@@ -442,13 +478,13 @@ export async function callOpenRouter(
     if (data.error) {
       console.error(`[OpenRouter] API Error (${model.id}):`, data.error.message);
       reportModelError(model.id);
-      throw new Error(data.error.message);
+      throw new OpenRouterError(data.error.message, true);
     }
 
     const content = data.choices?.[0]?.message?.content;
-    if (!content) {
+    if (content === undefined || content === null || content === '') {
       reportModelError(model.id);
-      throw new Error('Empty response from OpenRouter');
+      throw new OpenRouterError('Empty response from OpenRouter', true);
     }
 
     // Success - reset circuit breaker for this model
@@ -466,8 +502,13 @@ export async function callOpenRouter(
         : undefined,
     };
   } catch (error) {
-    // Report error if not already reported
-    if (error instanceof Error && !error.message.includes('OpenRouter')) {
+    // Report error only if not already reported via OpenRouterError
+    if (error instanceof OpenRouterError) {
+      if (!error.alreadyReported) {
+        reportModelError(model.id);
+      }
+    } else {
+      // Unknown error type - report it
       reportModelError(model.id);
     }
     throw error;
@@ -476,15 +517,18 @@ export async function callOpenRouter(
 
 /**
  * Make a request with automatic fallback to next healthy model.
+ * Tracks already-attempted models to ensure each fallback attempt uses a different model.
  */
 export async function callWithFallback(
   options: Omit<OpenRouterRequestOptions, 'model'>,
   context?: UnicornContext
 ): Promise<OpenRouterResponse> {
   let lastError: Error | null = null;
+  const attemptedModels: string[] = [];
 
   for (let attempt = 0; attempt < MAX_FALLBACK_ATTEMPTS; attempt++) {
-    const model = selectModel(context);
+    const model = selectModel(context, attemptedModels);
+    attemptedModels.push(model.id);
 
     try {
       return await callOpenRouter({ ...options, model });
