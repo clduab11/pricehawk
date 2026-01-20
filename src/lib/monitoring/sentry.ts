@@ -1,8 +1,24 @@
 /**
- * Sentry Error Tracking Integration
+ * Sentry Error Tracking Integration (Stub Implementation)
  * 
  * Provides centralized error tracking and monitoring for production.
  * Configure SENTRY_DSN environment variable to enable.
+ * 
+ * IMPORTANT: This is a stub implementation that logs errors locally.
+ * For production use, install the official Sentry SDK:
+ * 
+ *   npm install @sentry/node
+ * 
+ * Then replace this file with actual SDK integration:
+ *   import * as Sentry from '@sentry/node';
+ *   Sentry.init({ dsn: process.env.SENTRY_DSN });
+ *   export const sentry = Sentry;
+ * 
+ * The current implementation provides:
+ * - Same interface as the real SDK for easy migration
+ * - Local logging of errors for development
+ * - Error buffering before initialization
+ * - No external dependencies
  * 
  * @see https://docs.sentry.io/platforms/node/
  */

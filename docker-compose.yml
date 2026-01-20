@@ -28,7 +28,9 @@ services:
       - redis_data:/data
     # Enable AOF persistence for BullMQ job recovery
     # AOF fsync policy: everysec provides good balance of durability and performance
-    command: redis-server --appendonly yes --appendfsync everysec --maxmemory 256mb --maxmemory-policy noeviction
+    # Memory policy: allkeys-lru evicts least recently used keys when memory limit reached
+    # This ensures job queue reliability even under memory pressure
+    command: redis-server --appendonly yes --appendfsync everysec --maxmemory 256mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s

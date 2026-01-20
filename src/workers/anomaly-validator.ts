@@ -3,6 +3,7 @@ import { validateAndProcess } from '@/lib/ai/validator';
 import { moveToDLQ } from '@/lib/streams/dlq';
 import { metrics } from '@/lib/monitoring/metrics';
 import { sentry } from '@/lib/monitoring/sentry';
+import { alertService } from '@/lib/monitoring/alerts';
 import { createGracefulShutdown, sleepWithShutdownCheck } from '@/lib/workers/graceful-shutdown';
 import type { PricingAnomaly } from '@/types';
 
@@ -128,8 +129,10 @@ main().catch(async (error) => {
   if (error instanceof Error) {
     sentry.captureException(error, { level: 'fatal' });
   }
-  await import('@/lib/monitoring/alerts').then(({ alertService }) => 
-    alertService.sendAlert('Fatal Anomaly Validator Error', error)
-  );
+  try {
+    await alertService.sendAlert('Fatal Anomaly Validator Error', error);
+  } catch (alertError) {
+    console.error('Failed to send fatal error alert:', alertError);
+  }
   process.exit(1);
 });
