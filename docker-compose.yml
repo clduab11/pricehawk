@@ -7,10 +7,18 @@ services:
       POSTGRES_USER: pricehawk
       POSTGRES_PASSWORD: password
       POSTGRES_DB: pricehawk
+      # Connection pool settings (recommended: max_connections = max_pool * num_workers + overhead)
+      POSTGRES_INITDB_ARGS: "--data-checksums"
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pricehawk -d pricehawk"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   redis:
     image: redis:7-alpine
@@ -18,6 +26,17 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    # Enable AOF persistence for BullMQ job recovery
+    # AOF fsync policy: everysec provides good balance of durability and performance
+    # Memory policy: allkeys-lru evicts least recently used keys when memory limit reached
+    # This ensures job queue reliability even under memory pressure
+    command: redis-server --appendonly yes --appendfsync everysec --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
   app:
     build:
@@ -29,11 +48,21 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       NEXT_PUBLIC_APP_URL: http://localhost:3000
+      DATABASE_POOL_MIN: "10"
+      DATABASE_POOL_MAX: "30"
     ports:
       - "3000:3000"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # Separate service for Scraper because it needs Playwright browsers
   # We use the official Playwright image to ensure browsers are there
@@ -49,9 +78,21 @@ services:
       DATABASE_URL: postgres://pricehawk:password@postgres:5432/pricehawk
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      WORKER_TYPE: scraper
+      GRACEFUL_SHUTDOWN_TIMEOUT: "30000"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'tsx src/worker.ts' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Graceful shutdown: allow worker to finish in-flight jobs
+    stop_grace_period: 30s
 
   # Other workers can use the base App image (lighter) or the same playwright image if code is shared
   worker-validator:
@@ -61,9 +102,20 @@ services:
       DATABASE_URL: postgres://pricehawk:password@postgres:5432/pricehawk
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      WORKER_TYPE: anomaly-validator
+      GRACEFUL_SHUTDOWN_TIMEOUT: "30000"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'anomaly-validator' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    stop_grace_period: 30s
 
   worker-notify:
     build: .
@@ -72,9 +124,20 @@ services:
       DATABASE_URL: postgres://pricehawk:password@postgres:5432/pricehawk
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      WORKER_TYPE: notification-sender
+      GRACEFUL_SHUTDOWN_TIMEOUT: "30000"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'notification-sender' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    stop_grace_period: 30s
 
   worker-social:
     build: .
@@ -83,9 +146,20 @@ services:
       DATABASE_URL: postgres://pricehawk:password@postgres:5432/pricehawk
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      WORKER_TYPE: social-poster
+      GRACEFUL_SHUTDOWN_TIMEOUT: "30000"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'social-poster' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    stop_grace_period: 30s
 
   worker-verifier:
     build: .
@@ -94,9 +168,64 @@ services:
       DATABASE_URL: postgres://pricehawk:password@postgres:5432/pricehawk
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      WORKER_TYPE: deal-verifier
+      GRACEFUL_SHUTDOWN_TIMEOUT: "30000"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'deal-verifier' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    stop_grace_period: 30s
+
+  worker-newsletter:
+    build: .
+    command: tsx src/workers/newsletter-digest.ts
+    environment:
+      DATABASE_URL: postgres://pricehawk:password@postgres:5432/pricehawk
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      WORKER_TYPE: newsletter-digest
+      GRACEFUL_SHUTDOWN_TIMEOUT: "30000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'newsletter-digest' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    stop_grace_period: 30s
+
+  worker-telegram:
+    build: .
+    command: tsx src/workers/telegram-bot.ts
+    environment:
+      DATABASE_URL: postgres://pricehawk:password@postgres:5432/pricehawk
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      WORKER_TYPE: telegram-bot
+      GRACEFUL_SHUTDOWN_TIMEOUT: "30000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'telegram-bot' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    stop_grace_period: 30s
 
 volumes:
   postgres_data:
