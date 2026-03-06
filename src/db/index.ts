@@ -18,12 +18,24 @@ const { PrismaClient } = prismaClientPkg as unknown as {
 const DATABASE_URL = process.env.DATABASE_URL || 
   'postgresql://postgres:postgres@localhost:5432/pricehawk';
 
-// Connection pool configuration
+/**
+ * Connection pool configuration for production
+ * 
+ * Pool sizing guidelines:
+ * - min: Keeps connections warm for immediate availability
+ * - max: Should not exceed database connection limit / number of workers
+ * - Recommended: min=10, max=30 for concurrent workers
+ * 
+ * @see https://node-postgres.com/features/pooling
+ */
 const pool = new Pool({
   connectionString: DATABASE_URL,
-  max: parseInt(process.env.DATABASE_POOL_SIZE || '10'),
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
+  min: parseInt(process.env.DATABASE_POOL_MIN || '10'),
+  max: parseInt(process.env.DATABASE_POOL_MAX || '30'),
+  idleTimeoutMillis: parseInt(process.env.DATABASE_IDLE_TIMEOUT || '30000'),
+  connectionTimeoutMillis: parseInt(process.env.DATABASE_CONNECTION_TIMEOUT || '10000'),
+  // Allow idle connections to be closed to free resources
+  allowExitOnIdle: process.env.NODE_ENV !== 'production',
 });
 
 // Prisma PostgreSQL adapter

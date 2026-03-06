@@ -531,3 +531,84 @@ flowchart TD
 - **Monitoring:** < 2 minute alert delivery, zero false positives
 - **Incident Response:** < 30 minute MTTR for critical issues
 - **Rollback:** < 10 minute rollback time when needed
+
+---
+
+## Production Deployment Checklist
+
+Use this checklist before every production deployment:
+
+### Pre-Flight Checks
+
+- [ ] **Environment Validation**
+  - [ ] Run `npm run validate:env` - all required variables present
+  - [ ] Verify API keys are valid (OpenRouter, Clerk, Stripe, Twilio, Resend)
+  - [ ] Check API quotas sufficient for expected load
+
+- [ ] **Database Preparation**
+  - [ ] Connection pool configured (min: 10, max: 30)
+  - [ ] Run `npx prisma migrate deploy` for any schema changes
+  - [ ] Verify database backup completed
+
+- [ ] **Redis Configuration**
+  - [ ] AOF persistence enabled (`appendonly yes`)
+  - [ ] Memory limit set appropriately
+  - [ ] Eviction policy set to `noeviction` for job queues
+
+- [ ] **Docker Images**
+  - [ ] Build and test locally: `docker-compose build`
+  - [ ] Push to container registry
+  - [ ] Verify health checks pass: `docker-compose up -d && docker-compose ps`
+
+### Deployment
+
+- [ ] **Railway Staging**
+  - [ ] Deploy to staging environment first
+  - [ ] Verify `railway.toml` configuration
+  - [ ] Run smoke tests against staging
+
+- [ ] **Worker Verification**
+  - [ ] All 6 workers starting: anomaly-validator, notification-sender, deal-verifier, social-poster, newsletter-digest, telegram-bot
+  - [ ] Health checks passing
+  - [ ] Graceful shutdown working (test with `docker-compose stop`)
+
+- [ ] **Notification Channels**
+  - [ ] Discord webhook delivering test message
+  - [ ] Email via Resend rendering correctly
+  - [ ] SMS via Twilio (if enabled) within 160 chars
+  - [ ] Telegram bot responding to commands
+  - [ ] Other channels tested as applicable
+
+### Post-Deployment
+
+- [ ] **Monitoring Setup**
+  - [ ] Sentry capturing errors (send test error)
+  - [ ] Metrics flowing to Redis
+  - [ ] Grafana dashboards accessible
+  - [ ] Alert webhooks configured
+
+- [ ] **Smoke Tests**
+  - [ ] Health endpoint returns 200: `curl /api/health`
+  - [ ] Authentication working via Clerk
+  - [ ] Database queries executing
+  - [ ] Stripe checkout session creates successfully
+  - [ ] Workers processing jobs (check queue status)
+
+- [ ] **Soak Test (48 hours)**
+  - [ ] Zero critical bugs
+  - [ ] Error rate < 5%
+  - [ ] No memory leaks
+  - [ ] No queue backlog buildup
+
+### Go/No-Go Decision
+
+| Criteria | Threshold | Status |
+|----------|-----------|--------|
+| Detection Accuracy | ≥ 85% precision | ☐ |
+| False Positive Rate | < 15% | ☐ |
+| Notification Latency | < 60 seconds | ☐ |
+| Worker Uptime | ≥ 99.5% | ☐ |
+| Zero Critical Bugs | 48-hour soak | ☐ |
+| Beta Feedback | ≥ 4/5 rating | ☐ |
+
+**Final Approval**: [ ] Production deployment approved by @clduab11
