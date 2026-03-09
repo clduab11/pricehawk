@@ -87,7 +87,7 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == format('refs/tags/{0}', github.event.inputs.version || github.ref_name) }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./${{ matrix.dockerfile }}
